@@ -62,15 +62,22 @@ python3 "${CLAUDE_SKILL_DIR}/perps.py" backtest --all --detail
 7. **Stop:** the signal close -/+ 2.0 x ATR (1.5 ATR from the limit).
    **Target:** 2R from the fill. **Time stop:** 48 hours after the fill, or
    the weekend close, whichever comes first.
-8. **Size:** 1.5% of the account at risk per trade, 0.04% open and close fee
-   included, isolated 5x. Max 3 new trades a day.
+8. **Size (volatility tilt):** 2% of the account at risk per trade when BTC's
+   7-day realized volatility is EXPANDING (stdev of the last 42 closed 4h
+   returns above the 42 before), 1% when it is contracting. Fees included,
+   isolated 5x, max 3 open, max 3 new a day, one position per coin. The scan
+   header prints the state and the risk.
 
-Backtest Nov 2023 to Nov 2026, 4h signals executed on 1h bars, 0.04% fee
-per side, stop first when a 1h bar touches both, no target on the fill bar:
-182 trades (about 5 a month), 60% win, +0.48R average, profit factor 2.6.
-Last 12 months (traits found on the first two years): 71 trades, 66% win,
-+0.56R, profit factor 3.2. Challenge sim at 2%: stage 1 passed 87%
-(median 64 days), failed 10%; both stages passed 72% (median 135 days).
+Backtest Nov 2023 to Nov 2026, 4h signals, 15m execution, limits filled only
+if price trades 0.05 ATR THROUGH them, 0.04% fee per side, stop first when a
+bar touches both, no target on the fill bar: 181 trades (about 5 a month),
+58% win, +0.43R average (expect about +0.42R live). By volatility state:
+expanding +0.44 / +0.65R, contracting +0.25 / +0.26R (first 2 years / last
+year). The Monte Carlo lie-detector: on shuffled-day synthetic markets Q
+makes about +0.05R vs +0.22R on real history (simple 4h engine), so the edge
+is real trend structure. All 324 parameter combinations around these
+settings were profitable; re-tuning them every 3 months made results WORSE
+(+1.41 vs +2.17R a month), so the settings are fixed.
 
 Why these filters: of ~15 traits measured on every A trade, only four held
 up in both the first two years and the last year: breadth (3+ coins
@@ -97,20 +104,31 @@ Runs in the same `scan`, at the 08:00, 12:00, 16:00 and 20:00 SGT 4h closes
    closes (4 hours). Not triggered: cancel.
 4. **Stop:** beyond C2's sweep wick + 0.1 ATR. **Target:** C1's far end (the
    floor of the range for a short). Skipped below 1R.
-5. Same risk, guards, time stop and weekend close as Q; tickets are tagged
-   `crt4h` so `tune` reports it separately.
+5. **BTC daily filter:** BTC's daily EMA20 must agree with the side (EMA20 >
+   EMA50 for longs, below for shorts); without it the first year lost money.
+6. **Size:** half of Q's: 1% (volatility expanding) / 0.5% (contracting),
+   with 0.05% stop-order slippage built into the size. **Time stop:** 24h.
+   Weekend close as Q. A coin that already has a Q ticket in the same scan is
+   skipped (one position per coin); tickets beyond the free slots are skipped.
+   Tagged `crt4h` so `tune` reports it separately.
 
-Research, last 3 years, 10 coins, 15m execution, 0.04% fee per side: +0.16R a
-trade, 52% win, about 4-5 a month (-0.04 / +0.27 / +0.20R by year). Weaker
-than Q and it lost in its first year, so it runs at the same 1.5% risk and
-should be cut if `tune` shows it below 0R after 20 trades. Tested and
-rejected: entering at C3's open (-0.14R), a 15m CRT as confirmation
-(-0.05R), 1h/2h CRT, and requiring the sweep to hit a prior daily or 4h
-swing level (no consistent improvement).
+Research, last 3 years, 10 coins, 15m execution, stop orders triggered on a
+TOUCH and filled at the trigger + 0.05% slippage (honest model), BTC daily
+filter: 99 trades (2.7 a month), 58% win, +0.30R, profit factor 1.74;
+-0.04 / +0.45 / +0.40R by year; +0.29 / +0.31R on the 70/30 split. On
+probation: cut it (`"crt": {"enabled": false}`) if `tune` shows it below 0R
+after 20 trades. Rejected: entering at C3's open, a 15m CRT confirmation,
+1h/2h CRT, sweeps into prior daily/4h levels.
 
-Running Q and CRT together (one position per coin, max 3 open, max 3 a
-day), challenge sim at 1.5% risk: both stages passed 77%, median 89 days;
-at 2%: 55%, median 61 days. Q alone at 1.5%: 92%, median 158 days.
+## What to expect (both strategies together)
+
+Challenge simulation, Q + CRT with the volatility tilt, realistic fills,
+3 years of history: both stages passed 95% of rolling start dates (median
+~146 days); Monte Carlo of 3,000 resampled 60-week histories: 91% pass,
+median ~128 days, about 1 in 4 passes inside ~2 months. Q alone: 95% /
+~186 days (MC 87% / ~156 days). There is no setting that reliably passes
+in two weeks; raising risk mostly raises the failure rate. Results are
+history, not a promise.
 
 ## The pipeline (same shape as the original Day Trader pack)
 
@@ -123,7 +141,7 @@ at 2%: 55%, median 61 days. Q alone at 1.5%: 92%, median 158 days.
 | 5 replay | trader-timemachine | `backtest`: every past signal + challenge simulation |
 | 6 size | trader-budget | `risk_budget` + `size_trade` inside `scan` / `plan` |
 | 7 risk | trader-risk | the guards below; a BLOCK means no ticket |
-| 8 execute | trader-broker | the trader, by hand on Bitfunded, then `open` |
+| 8 execute | trader-broker | the trader, by hand on Bitfunded (limit / stop tickets), then `open` |
 | 9 alerts | trader-alerts | TradingView `create_alert` at the SL, TP and entry |
 
 ## Each scheduled scan, step by step

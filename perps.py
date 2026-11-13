@@ -77,7 +77,8 @@ DEFAULT_CONFIG = {
         "min_body_atr": 1.0,
         "aplus_breadth": 3,
         "crt": {"enabled": True, "hours": [8, 12, 16, 20], "body": 0.7, "min_range_atr": 1.0,
-                "min_rr": 1.0, "buf_atr": 0.1},
+                "min_rr": 1.0, "buf_atr": 0.1, "btc_daily_filter": True, "slippage_pct": 0.05, "hold_hours": 24},
+        "fill_pen_atr": 0.05,
         "donchian": 55,
         "ema_fast": 50,
         "ema_slow": 200,
@@ -94,8 +95,10 @@ DEFAULT_CONFIG = {
         "slippage_pct_per_side": 0.0,
     },
     "risk": {
-        "stage1_risk_pct": 1.5,
-        "stage2_risk_pct": 1.5,
+        "stage1_risk_pct": 2.0,
+        "stage2_risk_pct": 2.0,
+        "vol_tilt": {"enabled": True, "lookback_bars": 42, "contracting_mult": 0.5},
+        "setup_risk_mult": {"crt4h": 0.5},
         "funded_risk_pct": 0.5,
         "min_risk_pct": 0.25,
         "max_risk_pct": 2.5,
@@ -356,7 +359,7 @@ def stage_rules(cfg, stage):
     return cfg["stages"][str(stage)]
 
 
-def risk_budget(cfg, stage, realized, realized_today, open_risk, open_notional, n_open, target_r=None):
+def risk_budget(cfg, stage, realized, realized_today, open_risk, open_notional, n_open, target_r=None, mult=1.0, mult_why=""):
     """Dollars to risk on the next trade, and the limit that decided it.
     The invariant: realized loss today + every open position's loss at its stop
     (fees included) never exceeds our daily guard, and the same for the overall
@@ -371,6 +374,9 @@ def risk_budget(cfg, stage, realized, realized_today, open_risk, open_notional, 
     key = "stage%s_risk_pct" % stage if str(stage) in ("1", "2") else "funded_risk_pct"
     pct = R[key] * R.get("risk_mult", 1.0)
     why = "base %.2f%% (stage %s) x mult %.2f" % (R[key], stage, R.get("risk_mult", 1.0))
+    if mult != 1.0:
+        pct *= mult
+        why += " x %.2f (%s)" % (mult, mult_why or "setup/regime")
     if realized < -R["drawdown_cut_pct"] / 100 * acct:
         pct *= R["drawdown_cut_mult"]
         why += ", halved: down more than %.1f%%" % R["drawdown_cut_pct"]
@@ -626,6 +632,25 @@ def download(name, iv, months):
 
 # ---------------------------------------------------------------- backtest
 
+def btc_vol_state(bars, n=42):
+    """BTC 7-day realized volatility state by 4h bar open time: True = expanding (stdev of the last n closed
+    4h log returns above the n before), False = contracting. Research: Q +0.44/+0.65R expanding vs
+    +0.25/+0.26R contracting (first 2 years / last year); sizing Q 2% / 1% kept the pass rate highest."""
+    c = [b[4] for b in bars]
+    lr = [0.0] + [math.log(c[i] / c[i - 1]) for i in range(1, len(c))]
+    out = {}
+    for i in range(2 * n, len(c)):
+        out[bars[i][0]] = statistics.pstdev(lr[i - n + 1:i + 1]) > statistics.pstdev(lr[i - 2 * n + 1:i - n + 1])
+    return out
+
+
+def vol_mult(cfg, expanding):
+    vt = cfg["risk"].get("vol_tilt", {})
+    if not vt.get("enabled") or expanding is None or expanding:
+        return 1.0
+    return vt.get("contracting_mult", 0.5)
+
+
 def btc_regime(bars, st):
     """BTC 4h trend by bar open time: +1 when EMA fast > EMA slow, -1 below."""
     c = [b[4] for b in bars]
@@ -736,7 +761,8 @@ def gen_trades_exec(sym, bars4, bars1, st, sch=None, costs=None, regime=None, ga
             lim = c - s * st["limit_atr"] * a
             n = None
             for m in range(n0, min(len(bars1), n0 + st["limit_valid_hours"])):
-                if (s == 1 and bars1[m][3] <= lim) or (s == -1 and bars1[m][2] >= lim):
+                pen = st.get("fill_pen_atr", 0.0) * a      # price must trade THROUGH the limit
+                if (s == 1 and bars1[m][3] <= lim - pen) or (s == -1 and bars1[m][2] >= lim + pen):
                     n, e = m, (min(bars1[m][1], lim) if s == 1 else max(bars1[m][1], lim))
                     break
             if n is None:
@@ -765,7 +791,7 @@ def gen_trades_exec(sym, bars4, bars1, st, sch=None, costs=None, regime=None, ga
         if px is None:
             px = bars1[m][4] * (1 - s * slip)
         t_out = bars1[m][0] + (0 if why == "weekend" else HOUR_MS)
-        rec = {"sym": sym, "setup": sig["setup"], "side": sig["side"], "t_in": bars1[n][0], "t_out": t_out,
+        rec = {"sym": sym, "setup": sig["setup"], "side": sig["side"], "t_in": bars1[n][0], "t_out": t_out, "sig_t": ind["t"][i],
                "ret": s * (px - e) / e, "stop_frac": d / e, "exit": why, "cost_side": slip}
         if costs:
             rec["fee"] = costs["fee"]
@@ -851,7 +877,7 @@ def sim_stage(cfg, trades, start_ms, stage, max_days=None):
             continue
         o_risk = sum(p["risk"] for p in open_pos)
         o_not = sum(p["notional"] for p in open_pos)
-        risk, _ = risk_budget(cfg, stage, realized, day_pnl, o_risk, o_not, len(open_pos))
+        risk, _ = risk_budget(cfg, stage, realized, day_pnl, o_risk, o_not, len(open_pos), mult=tr.get("risk_mult", 1.0))
         if risk <= 0:
             continue
         if tr["stop_frac"] * 100 < cfg["risk"]["min_stop_pct"]:
@@ -943,10 +969,11 @@ def cmd_rules(cfg, a):
               R["max_position_margin_pct"], R["drawdown_cut_pct"], "on" if R["finish_line"] else "off"))
 
 
-def time_stop_text(cfg):
+def time_stop_text(cfg, hours=None):
     sch = cfg["schedule"]
     now_ms = int(now_utc().timestamp() * 1000)
-    ts, why = now_ms + hold_hours(cfg) * HOUR_MS, "%dh time stop" % hold_hours(cfg)
+    hours = hours or hold_hours(cfg)
+    ts, why = now_ms + hours * HOUR_MS, "%dh time stop" % hours
     if sch.get("flat_for_weekend"):
         wk = next_weekend_stop(now_ms, sch)
         if wk < ts:
@@ -973,7 +1000,7 @@ def round_px(px, tick, how):
     return round(n * tick, 10)
 
 
-def ticket(cfg, j, sym, side, entry, stop, target=None, setup="manual"):
+def ticket(cfg, j, sym, side, entry, stop, target=None, setup="manual", mult=1.0, mult_why="", slip=0.0, hold=None):
     st = journal_state(cfg, j)
     stage = j["stage"]
     if (side == "long" and stop >= entry) or (side == "short" and stop <= entry):
@@ -998,11 +1025,11 @@ def ticket(cfg, j, sym, side, entry, stop, target=None, setup="manual"):
         return None, "already holding %s: one position per coin, and hedging is banned" % sym
     tr = abs(target - entry) / abs(entry - stop)
     risk, why = risk_budget(cfg, stage, st["realized"], st["realized_today"], st["open_risk"],
-                            st["open_notional"], len(st["open"]), tr)
+                            st["open_notional"], len(st["open"]), tr, mult, mult_why)
     if risk <= 0:
         return None, "BLOCK: " + why
     costs = symbol_costs(cfg, sym)
-    sz = size_trade(cfg, entry, stop, risk, st["open_notional"], costs["fee"], costs["side"])
+    sz = size_trade(cfg, entry, stop, risk, st["open_notional"], costs["fee"], costs["side"] + slip)
     lot = instrument(sym)["lot"]
     qty = math.floor(sz["qty"] / lot + 1e-9) * lot                         # round DOWN: risk never above budget
     if qty < lot:
@@ -1018,7 +1045,7 @@ def ticket(cfg, j, sym, side, entry, stop, target=None, setup="manual"):
          "risk_usd": sz["loss_at_stop"], "reward_usd": sz["notional"] * (abs(target - entry) / entry) - sz["fees_round_trip"],
          "fees_round_trip": sz["fees_round_trip"], "rr": tr, "sized_by": why if sz["limit"] == "risk" else sz["limit"],
          "stage": stage, "firm_hold_limit_days": hold_days,
-         "time_stop": time_stop_text(cfg)}
+         "time_stop": time_stop_text(cfg, hold)}
     return t, None
 
 
@@ -1086,6 +1113,9 @@ def cmd_scan(cfg, a):
             ", ".join(local_dt(t, off).strftime("%a %H:%M") for t in next_scans(sch, 3))))
         return 1
     btc_trend = reg.get(btc[-1][0]) if btc else None
+    vexp = btc_vol_state(btc, cfg["risk"].get("vol_tilt", {}).get("lookback_bars", 42)).get(btc[-1][0]) if btc else None
+    vm = vol_mult(cfg, vexp)
+    vwhy = "BTC 7-day volatility %s" % ("expanding" if vexp else "contracting")
     st_raw = dict(st, min_body_atr=0)
     breadth = 0
     for s in syms:
@@ -1122,13 +1152,17 @@ def cmd_scan(cfg, a):
                 expiry = local_dt(close_ms + st["limit_valid_hours"] * HOUR_MS, off).strftime("%a %d %b %H:%M SGT")
             else:
                 entry, expiry = c, None
-            t, err = ticket(cfg, j, s, sig["side"], entry, stop, None, sig["setup"])
+            t, err = ticket(cfg, j, s, sig["side"], entry, stop, None, sig["setup"], vm, vwhy)
             if t:
                 t["order"] = ("LIMIT at %s, cancel if not filled by %s" % (fmt_px(entry), expiry)) if expiry else "MARKET"
             found.append((s, sig, t, err, line))
         watch.append(line)
     print("Scan of the %s bar that closed %s SGT, %d symbols, BTC trend %s (feed: %s; confirm on BINANCE:<SYM>USDT.P)." % (
         st["interval"], close_sgt, len(syms), {1: "up: longs only", -1: "down: shorts only"}.get(btc_trend, "?"), feed))
+    if vexp is not None:
+        print("BTC 7-day volatility: %s -> risk x%.2f (Q %.2f%%, CRT %.2f%% of the account before guards)." % (
+            "EXPANDING" if vexp else "contracting", vm, cfg["risk"]["stage1_risk_pct"] * vm,
+            cfg["risk"]["stage1_risk_pct"] * vm * cfg["risk"].get("setup_risk_mult", {}).get("crt4h", 1.0)))
     if not scheduled:
         print("Note: this close is not a scheduled scan (%s SGT). Tickets are for information; the backtest only takes scheduled closes." % (
             ", ".join("%02d:00" % h for h in sch["scan_hours"])))
@@ -1149,10 +1183,17 @@ def cmd_scan(cfg, a):
         offered[key] = now_iso()
         return False
 
+    maxo = min(cfg["risk"]["max_open_positions"], cfg["firm"]["max_open_positions"])
+    free = max(0, maxo - len(journal_state(cfg, j)["open"]))
+    issued = set()
     for k, (s, sig, t, err, line) in enumerate(found, 1):
         if t and repeat(t):
             continue
+        if t and len(sigs) >= free:
+            print("#%d %s %s skipped: no free slot (max %d open)." % (k, sig["side"], s, maxo))
+            continue
         if t:
+            issued.add(s)
             t["breadth"] = breadth
             if breadth >= st.get("aplus_breadth", 99):
                 t["setup"] = t["setup"] + " A+ (%d coins breaking out together)" % breadth
@@ -1161,6 +1202,25 @@ def cmd_scan(cfg, a):
         else:
             print("#%d %s %s %s: %s" % (k, sig["side"], s, sig["setup"], err))
     crt_cfg = st.get("crt", {})
+    btc_daily = None
+    if crt_cfg.get("enabled") and crt_cfg.get("btc_daily_filter") and crt_found:
+        try:
+            dbars, _ = live_klines("BTC", "1d", need=80)
+            dc = [b[4] for b in dbars]
+            e20, e50 = ema(dc, 20), ema(dc, 50)
+            if e20[-1] is not None and e50[-1] is not None:
+                btc_daily = 1 if e20[-1] > e50[-1] else -1
+        except Exception:
+            btc_daily = None
+        if btc_daily is None:
+            print("CRT: BTC daily trend unavailable, CRT tickets withheld.")
+            crt_found = []
+        else:
+            keep = [(s_, h_) for s_, h_ in crt_found if (h_[0] == "long") == (btc_daily > 0)]
+            for s_, h_ in crt_found:
+                if (s_, h_) not in keep:
+                    print("CRT %s %s skipped: against BTC's daily trend (EMA20 %s EMA50)." % (h_[0], s_, ">" if btc_daily > 0 else "<"))
+            crt_found = keep
     if crt_cfg.get("enabled"):
         if local_dt(close_ms, off).hour not in crt_cfg["hours"]:
             print("CRT: this close is not a CRT scan (%s SGT)." % ", ".join("%02d:00" % h for h in crt_cfg["hours"]))
@@ -1169,7 +1229,15 @@ def cmd_scan(cfg, a):
         for s, (side, trig, stop, tgt) in crt_found:
             if local_dt(close_ms, off).hour not in crt_cfg["hours"]:
                 break
-            t, err = ticket(cfg, j, s, side, trig, stop, tgt, "crt4h")
+            cm = cfg["risk"].get("setup_risk_mult", {}).get("crt4h", 1.0)
+            if s in issued:
+                print("CRT %s %s skipped: %s already has a Q ticket this scan (one position per coin)." % (side, s, s))
+                continue
+            if len(sigs) >= free:
+                print("CRT %s %s skipped: no free slot (max %d open)." % (side, s, maxo))
+                continue
+            t, err = ticket(cfg, j, s, side, trig, stop, tgt, "crt4h", vm * cm, vwhy + ", CRT half size",
+                            crt_cfg.get("slippage_pct", 0.0) / 100, crt_cfg.get("hold_hours"))
             if err:
                 print("CRT %s %s: %s" % (side, s, err))
                 continue
@@ -1440,6 +1508,9 @@ def cmd_backtest(cfg, a):
         t1 = bars[-1][0] if t1 is None else max(t1, bars[-1][0])
     if not trades:
         return 1
+    vstate = btc_vol_state(load_json(cache_file("BTC", iv), []), cfg["risk"].get("vol_tilt", {}).get("lookback_bars", 42))
+    for t in trades:
+        t["risk_mult"] = vol_mult(cfg, vstate.get(t.get("sig_t")))
     trades.sort(key=lambda t: t["t_in"])
     cut = t0 + (t1 - t0) * a.split
     ins = [t for t in trades if t["t_in"] < cut]
