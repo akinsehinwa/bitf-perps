@@ -113,7 +113,7 @@ def run(sym, fill='old', slip=0.0, pen=0.05, dfilt=False, hours=None):
         px, why, to = rq.walk(b15, n, side, e, stop, tgt, b15[n][0] + 24 * H)
         out.append({'sym': sym, 'side': side, 't_in': b15[n][0], 't_out': to, 'exit': why, 'dec': t3,
                     'r': (side * (px - e) / e - 2 * FEE) / (d / e + 2 * FEE), 'tag': 'C', 'prio': 1,
-                    'rex': vexp(t3)})
+                    'rex': vexp(t3), 'stop_frac': d / e})
         busy = to; days[t3 // D] += 1
     return out
 
