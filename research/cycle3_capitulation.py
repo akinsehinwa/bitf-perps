@@ -363,32 +363,29 @@ if __name__ == '__main__':
     PK = pickle.load(open(S + '/book_trades_v2.pkl', 'rb')); Q, C = PK['Q'], PK['C']
     if part in ('all', '1'):
         V1 = collections.OrderedDict()
-        for name, kw in (
+        KW = collections.OrderedDict((
                 ('1a L P85|25% R35 2R', dict()),
                 ('1b L P85|25% R35 3R', dict(tr=3.0)),
                 ('1c L P90|25% R30 2R', dict(P=0.90, R=30)),
                 ('1d L P80|25% R35 2R', dict(P=0.80)),
                 ('1e L P85|25% R40 2R', dict(R=40)),
                 ('1f S mirror P85|25% R35 2R', dict(sides=(-1,))),
-                ('1g L+S P85|25% R35 2R', dict(sides=(1, -1)))):
+                ('1g L+S P85|25% R35 2R', dict(sides=(1, -1)))))
+        for name, kw in KW.items():
             V1[name] = cap(**kw); cc.report(V1[name], name)
             print('   IS/OS R/mo %+.2f / %+.2f' % is_os_rmo(V1[name]), flush=True)
         pickle.dump(V1, open(S + '/cycle3_cap.pkl', 'wb'))
         best = max(V1, key=lambda k: is_os_rmo(V1[k])[0])
-        print('selected on IS R/mo:', best)
-        wf = cap(**dict([('1a L P85|25% R35 2R', {}), ('1b L P85|25% R35 3R', {'tr': 3.0}), ('1c L P90|25% R30 2R', {'P': .9, 'R': 30}),
-                         ('1d L P80|25% R35 2R', {'P': .8}), ('1e L P85|25% R35 2R', {'R': 40}), ('1f S mirror P85|25% R35 2R', {'sides': (-1,)}),
-                         ('1g L+S P85|25% R35 2R', {'sides': (1, -1)})])[best], wflat=True)
-        cc.report(wf, best + ' + weekend flat (sensitivity)')
-        N = V1[best]
+        print('selected on IS R/mo:', best, '| primary (pre-specified) = 1a')
+        for nm in ('1a L P85|25% R35 2R', best):
+            cc.report(cap(wflat=True, **KW[nm]), nm + ' + weekend flat (sensitivity)')
         book_line('baseline Q+C', tagged(Q + C))
-        for rk in (1.0, 0.5):
-            book_line('Q+C+CAP %s @%.1f%%' % (best, rk), tagged(Q + C + N), rk)
-        for rk in (1.0, 1.5, 2.0):
-            book_line('CAP alone %s @%.1f%%' % (best, rk), tagged(N), rk)
-        if '1a L P85|25% R35 2R' != best:
+        for nm in ('1a L P85|25% R35 2R', best, '1g L+S P85|25% R35 2R'):
+            for rk in (1.0, 0.5):
+                book_line('Q+C+CAP %s @%.1f%%' % (nm[:3], rk), tagged(Q + C + V1[nm]), rk)
+        for nm in ('1a L P85|25% R35 2R', best):
             for rk in (1.0, 1.5, 2.0):
-                book_line('CAP alone 1a @%.1f%%' % rk, tagged(V1['1a L P85|25% R35 2R']), rk)
+                book_line('CAP alone %s @%.1f%%' % (nm[:3], rk), tagged(V1[nm]), rk)
     if part in ('all', 'long'):
         t0 = int(perps.dt.datetime(2020, 7, 1, tzinfo=perps.UTC).timestamp() * 1000)
         for fear in ('none', 'rv'):

@@ -6,8 +6,8 @@ trader places BY HAND from tickets on a 4h clock (scans 08:00 / 20:00 / 00:00 SG
 Sun 20:00 SGT).
 
 Data: Binance USDT-M perps cached in /home/user/bitfunded-perps/trader/perps/cache/ (<SYM>-4h/1h/15m.json,
-<SYM>-funding.json, <SYM>-metrics.json = 5m OI/ratios). Engine: /home/user/bitfunded-perps/perps.py.
-Research helpers: /home/user/bitfunded-perps/research/ (qlab.py = Q signals + 15m execution lab,
+<SYM>-funding.json, <SYM>-metrics.json = 5m OI/ratios). Engine: /home/user/bitf-perps/perps.py (repo; run commands from /home/user/bitfunded-perps so the data cache resolves).
+Research helpers: /home/user/bitf-perps/research/ (qlab.py = Q signals + 15m execution lab,
 book2.py = multi-strategy book + challenge simulator, daily.py = daily bias, family.py, crt3.py).
 
 Non-negotiables for any test:
@@ -27,4 +27,4 @@ Non-negotiables for any test:
    Baseline: rolling 95% pass, median ~146-151 days; Monte Carlo 90-91%, median ~127 days.
    Standard Monte Carlo = research/review/mc.py method: 3000 paths, 60-week horizon, weekly blocks drawn
    from START+10d..START+1005d, seed 7. ALWAYS report both the rolling sim and this Monte Carlo.
-8. Write results and the decision to /home/user/bitfunded-perps/research/LEDGER.md (append, dated).
+8. Write results and the decision to /home/user/bitf-perps/research/LEDGER.md (append, dated).
