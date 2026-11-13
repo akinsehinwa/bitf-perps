@@ -36,3 +36,6 @@
   E[days] 94, E[fees] $635 vs safe Q1.5 95% / median 173d / E[days] 194 / $420.
 - Funded blow-acceptable (180d, 15d payouts): safe Q1.5 $7.1k, $41/day alive, 9% blown; aggr Q5 $9.9k, $108/day,
   83% blown by ~92d. Scripts: speed_lab.py, fast_pass.py, pipeline.py.
+- Limit-safe profiles (limit_safe.py; losing trades cost 1.05x / 1.25x planned risk). 5%/trade leaves no slippage room:
+  funded blown 100% in ~37d ($3.6k). 3% single position: eval 76% pass, median 80d, E[days] 117; funded $7.3k/180d,
+  78% blown. Safe 1.5%: eval 85%, median 163d; funded $6.8k/180d, 14% blown. Plan: pass fast (3% single), milk slow (1.5%).

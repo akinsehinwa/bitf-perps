@@ -117,7 +117,7 @@ def simulate(trades, cfg, start, end_data):
                 notional = max(0.0, min(mpos, mtot)); risk = notional * cost
                 if risk < 0.2:
                     continue
-            openp.append({'sym': t['sym'], 't_out': t['t_out'], 'risk': risk, 'notional': notional, 'pnl': t['r'] * risk})
+            openp.append({'sym': t['sym'], 't_out': t['t_out'], 'risk': risk, 'notional': notional, 'pnl': t['r'] * risk * (cfg.get('lossx', 1.0) if t['r'] < 0 else 1.0)})
             per_day[k] += 1
         if result is None:
             return 'open', (end_data - start) / D
@@ -231,7 +231,7 @@ def funded(trades, cfg, start, horizon_days=365, payout_every=15):
             notional = max(0.0, cap); risk = notional * cost
             if risk < 0.2:
                 continue
-        openp.append({'sym': t['sym'], 't_out': t['t_out'], 'risk': risk, 'notional': notional, 'pnl': t['r'] * risk})
+        openp.append({'sym': t['sym'], 't_out': t['t_out'], 'risk': risk, 'notional': notional, 'pnl': t['r'] * risk * (cfg.get('lossx', 1.0) if t['r'] < 0 else 1.0)})
         per_day[k] += 1
     if bal > 0:
         paid += bal * 500 * 0.8; n_pay += 1
