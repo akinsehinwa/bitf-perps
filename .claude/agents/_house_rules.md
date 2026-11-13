@@ -19,7 +19,9 @@ Non-negotiables for any test:
 4. Report: trades, trades/month, win %, avg R, profit factor, R/month, max drawdown (R).
 5. Count every variant tried. More than ~20 variants on one idea = treat the best as luck (deflate it).
 6. A filter is only useful if R/month or the pass rate improves - a better avg R on fewer trades is not enough.
-7. Compare to the baseline book: Q (4h quality breakout, 10 coins) 2% + CRT 4h (BTC daily trend) 1%, with
-   the BTC 7-day-volatility tilt (Q 2.5% when vol expanding / 1.25% contracting).
-   Baseline (rolling challenge sim): both stages 91%, median ~81 days.
+7. Compare to the baseline book built from research/book_trades_v2.pkl (house Q execution: 15m fills,
+   pen 0.05 ATR): Q (4h quality breakout, 10 coins) + CRT 4h (BTC daily trend), BTC 7-day realized-vol tilt
+   (Q 2.0% expanding / 1.0% contracting, CRT 1.0% / 0.5%). book2.book defaults, sim window START+10d ..
+   START+1005d. Baseline: rolling 95% pass, median ~151 days; Monte Carlo 92%, median ~126 days.
+   ALWAYS report both the rolling sim and the Monte Carlo.
 8. Write results and the decision to /home/user/bitfunded-perps/research/LEDGER.md (append, dated).
