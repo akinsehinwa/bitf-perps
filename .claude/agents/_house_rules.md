@@ -22,6 +22,9 @@ Non-negotiables for any test:
 7. Compare to the baseline book built from research/book_trades_v2.pkl (house Q execution: 15m fills,
    pen 0.05 ATR): Q (4h quality breakout, 10 coins) + CRT 4h (BTC daily trend), BTC 7-day realized-vol tilt
    (Q 2.0% expanding / 1.0% contracting, CRT 1.0% / 0.5%). book2.book defaults, sim window START+10d ..
-   START+1005d. Baseline: rolling 95% pass, median ~151 days; Monte Carlo 92%, median ~126 days.
-   ALWAYS report both the rolling sim and the Monte Carlo.
+   START+1005d. CRT fills: stop orders trigger on a TOUCH and fill at the trigger (or the gap open)
+   + 0.05% slippage (the pen rule is for limit orders only).
+   Baseline: rolling 95% pass, median ~146-151 days; Monte Carlo 90-91%, median ~127 days.
+   Standard Monte Carlo = research/review/mc.py method: 3000 paths, 60-week horizon, weekly blocks drawn
+   from START+10d..START+1005d, seed 7. ALWAYS report both the rolling sim and this Monte Carlo.
 8. Write results and the decision to /home/user/bitfunded-perps/research/LEDGER.md (append, dated).
