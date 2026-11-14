@@ -90,6 +90,8 @@ def simulate(trades, cfg, start, end_data):
             pct = cfg['q'] * (1.0 if t['rex'] else cfg['cmult'])
             if t['tag'] == 'C':
                 pct *= cfg['crt']
+            if t['tag'] == 'B':
+                pct *= cfg.get('bb', 1.0)
             if cfg['dd_cut'] and realized < -3.0:
                 pct *= 0.5
             if cfg.get('ramp') and realized < cfg['ramp'][0]:

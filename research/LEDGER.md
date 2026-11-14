@@ -71,3 +71,12 @@
   LINK, HYPE negative; BNB/XRP/ZEC -0.06. ~50 variants tried. PROBATION: next = reviewer audit + book sim with Q/CRT.
 - 2h-swing key levels (bb_v5.py): engulf BB20 +0.13R (4h levels) -> +0.09R (2h levels, 11.6/mo); same with stricter
   touches/tolerance; any-pattern +0.05 -> +0.03R. More levels = more trades of lower quality. REJECT; keep 4h levels.
+
+## 2026-11-14 BB20-engulf added to the book (book_bb.py)
+- Confluence rare: 13 of 301 B trades agree with a Q/CRT trade (same coin+side, 24h): +0.48R; B alone +0.11R; Q/CRT
+  confirmed by B +0.24R vs +0.39R without (n=12, noise). Monthly R correlation Q+CRT vs B -0.15 (diversifies).
+- Eval (rolling): safe 1.5%: Q+CRT 95% pass / median 173d / E[days] 194 -> +B x0.5 89% / 119d / 143d;
+  +B x1.0 85% / 73d / 110d. Fast 3% single: 76% / 80d / 117d -> +B x0.5 75% / 60d / 85d.
+## 2026-11-14 PYTH, ONDO, PENDLE (new_coins.py; 15m downloaded)
+- Q +0.01R (n=40), CRT -0.06R (38), BB20-engulf -0.08R (92), iFVG big legs -0.02R (26). Per-coin samples 7-34.
+  REJECT all three for now (PENDLE positive on CRT/iFVG but n 10-18).
