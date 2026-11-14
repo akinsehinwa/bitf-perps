@@ -139,3 +139,8 @@
 - + rule picks (corr>=0.70 & vol<100%: AVAX DOGE ENS FLOKI LTC SUI VIRTUAL): more R/mo but dd 10-15R, pass 86-88%.
 - core 8 + AVAX + LTC: 8.4/mo +0.45R +3.80R/mo dd 8.4R | 95% / 149d / E 155d (best balance; mild hindsight -
   both coins pass the rule and the results). + DOGE: 94% / 148d / 165d. Cherry-picked top 5: 95% / 149d / 159d.
+- Last-12-months view (core_swap_1y.py; user wants 1y as the standard): core 10 96 trades +0.53R +4.20R/mo dd 8.0R;
+  core 8 80 +0.61R +4.05 dd 5.8R; core 8 + AVAX + LTC 107 +0.55R +4.94 dd 8.4R; + rule picks (both) 154 +0.47R
+  +6.08 dd 15.4R. Prior 2y all +0.31..+0.39R. Per coin only 6-15 trades in 12 months.
+- HOUSE STANDARD from now: decide on the last 12 months; require the prior 2 years not negative (stability gate);
+  per-coin calls need pooled evidence (rules like corr/vol), not 6-15 trades.
