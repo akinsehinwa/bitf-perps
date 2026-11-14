@@ -75,8 +75,8 @@ Sun 20:00 (never tested). So weekends are mostly quiet by design.
    **Target:** 1.5R from the fill (after fees; 2R tested +0.43R vs 1.5R +0.41R
    with a higher win rate). **Time stop:** 48 hours after the fill, or
    the weekend close, whichever comes first.
-8. **Size (volatility tilt):** 1.5% of the account at risk per trade in the
-   eval (1% once funded) when BTC's 7-day realized volatility is EXPANDING
+8. **Size (volatility tilt):** 1.75% of the account at risk per trade in the
+   eval (1.5% once funded; user's choice 2026-11-14) when BTC's 7-day realized volatility is EXPANDING
    (stdev of the last 42 closed 4h returns above the 42 before), half that
    when it is contracting. Fees included,
    isolated 5x, max 3 open, max 3 new a day, one position per coin. The scan

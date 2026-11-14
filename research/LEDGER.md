@@ -166,3 +166,7 @@
   20 +0.51|+0.17 -> keep 00/08/20. Q by day: Mon -0.55|-0.16, Sat -0.11|-0.26, Sun +0.02|-0.17 -> skip Mon/Sat/Sun.
 - CRT by hour fine (08-20); by day Fri -0.21|-0.35, Sat -1.00(4)|-0.19 -> skip Fri/Sat.
 - Bot: 7-day check-ins, Q withheld outside its hours/days, CRT skip days, swing off in the tested weekend window.
+## 2026-11-14 Risk 1.75% eval / 1.5% funded (risk_175.py; full book incl. swing x0.5, skip days)
+- Eval: 1.5% 96% pass med 96d E 113d | 1.75% 97% / 88d / 102d | 2.0% 94% / 76d / 93d. ADOPT 1.75%.
+- Funded 1y, 15d payouts: 1.0% mean $15.3k med $15.9k worst10% $9.8k blown 0% | 1.25% $16.8k / $19.4k / $5.9k / 23% |
+  1.5% $15.1k / $13.7k / $1.8k / 57%. User chose 1.5% funded; data favours 1.0-1.25%.
