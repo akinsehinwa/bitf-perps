@@ -80,3 +80,11 @@
 ## 2026-11-14 PYTH, ONDO, PENDLE (new_coins.py; 15m downloaded)
 - Q +0.01R (n=40), CRT -0.06R (38), BB20-engulf -0.08R (92), iFVG big legs -0.02R (26). Per-coin samples 7-34.
   REJECT all three for now (PENDLE positive on CRT/iFVG but n 10-18).
+
+## 2026-11-14 BB20-engulf at 4h check-ins only (bb_scan.py; user can't watch 1h)
+- 7 coins (no LINK/HYPE): 1h entries +0.18R 7/mo. Entry delayed to the next check-in (skip if stop/target traded first):
+  08/12/16/20/00 +0.13R (yr3 -0.07); 08/12/16/20 +0.14R (yr3 -0.02); 08/20/00 +0.10R. Median wait 2h.
+- Eval 1.5%/trade (live tilts): Q+CRT 95% / 173d / E 194d; +B x0.5 81% / 137d / 182d (16% unfinished at data end).
+  Flat 1.5% everything: Q+CRT 76% / 136d; +B x0.5 88% / 119d / E 143d.
+- Funded 1%, 15d payouts, 1y (fixed: funded() now applies the B multiplier): Q+CRT $9.3k (worst10% $4.6k);
+  +B x0.5 at 08/12/16/20 check-ins $10.6k (worst10% $7.5k, 0% blown); x0.75-1.0 adds blow-ups (29-30%).

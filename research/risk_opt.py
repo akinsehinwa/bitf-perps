@@ -216,7 +216,7 @@ def funded(trades, cfg, start, horizon_days=365, payout_every=15):
             day, dpnl = k, 0.0
         if len(openp) >= cfg['max_open'] or per_day[k] >= 3 or any(p['sym'] == t['sym'] for p in openp):
             continue
-        pct = cfg['q'] * (1.0 if t['rex'] else cfg['cmult']) * (cfg['crt'] if t['tag'] == 'C' else 1.0)
+        pct = cfg['q'] * (1.0 if t['rex'] else cfg['cmult']) * (cfg['crt'] if t['tag'] == 'C' else 1.0) * (cfg.get('bb', 1.0) if t['tag'] == 'B' else 1.0)
         if cfg.get('hot') and wins_row >= cfg['hot'][0]:
             pct *= cfg['hot'][1]
         o_risk = sum(p['risk'] for p in openp)
