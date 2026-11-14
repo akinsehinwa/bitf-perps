@@ -44,7 +44,7 @@ def bias_at(sym, t):
 
 
 def run(sym, bias='daily', key='swing', pat=('engulf', 'pin', 'ifvg'), W=8, buf=0.25, tgt=1.5, n_bb=13, k_bb=2.0,
-        look=180, frac=3, hold=48, sides=(1, -1)):
+        look=180, frac=3, hold=48, sides=(1, -1), touches=3, hz_look=540, tol=0.25):
     b4 = load(sym, '4h'); b1 = load(sym, '1h')
     if len(b4) < 400:
         return []
@@ -53,6 +53,7 @@ def run(sym, bias='daily', key='swing', pat=('engulf', 'pin', 'ifvg'), W=8, buf=
     atr = perps.atr(hi, lo, c, 14)
     ph = [i for i in range(frac, len(b4) - frac) if hi[i] > max(hi[i - frac:i]) and hi[i] > max(hi[i + 1:i + 1 + frac])]
     pl = [i for i in range(frac, len(b4) - frac) if lo[i] < min(lo[i - frac:i]) and lo[i] < min(lo[i + 1:i + 1 + frac])]
+    ema50 = perps.ema(c, 50)
     out = []; busy = 0
     for i in range(max(60, n_bb), len(b4) - 1):
         T = b4[i][0] + H4
@@ -66,11 +67,32 @@ def run(sym, bias='daily', key='swing', pat=('engulf', 'pin', 'ifvg'), W=8, buf=
                 continue
             if bias in ('daily', 'both') and bias_at(sym, T) != side:
                 continue
+            if bias == 'struct':                     # last 2 confirmed 4h swing highs AND lows step the bias way
+                hs = [hi[p] for p in ph if p + frac <= i][-2:]; ls = [lo[p] for p in pl if p + frac <= i][-2:]
+                if len(hs) < 2 or len(ls) < 2:
+                    continue
+                down = hs[1] < hs[0] and ls[1] < ls[0]; upt = hs[1] > hs[0] and ls[1] > ls[0]
+                if not ((side == -1 and down) or (side == 1 and upt)):
+                    continue
+            if bias == 'ema4h':                      # 4h close on the bias side of EMA50, EMA50 sloping that way
+                if ema50[i] is None or ema50[i - 6] is None:
+                    continue
+                if not ((c[i] - ema50[i]) * side > 0 and (ema50[i] - ema50[i - 6]) * side > 0):
+                    continue
             if bias in ('btc', 'both'):
                 r = REG.get(b4[i][0])
                 if r is None or (r > 0) != (side == 1):
                     continue
-            if key != 'none':
+            if key == 'hz':                          # horizontal S/R: >= touches 4h swing points (highs or lows)
+                pts = [hi[q] for q in ph[bisect.bisect_left(ph, i - hz_look):] if q + frac <= i - 1] + \
+                      [lo[q] for q in pl[bisect.bisect_left(pl, i - hz_look):] if q + frac <= i - 1]
+                ok = False
+                for px in pts:
+                    if lo[i] <= px <= hi[i] and sum(abs(o - px) <= tol * a for o in pts) >= touches:
+                        ok = True; break
+                if not ok:
+                    continue
+            elif key != 'none':
                 piv = ph if side == -1 else pl
                 lv = []
                 for p in piv[bisect.bisect_left(piv, i - look):]:
