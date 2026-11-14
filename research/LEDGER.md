@@ -58,3 +58,6 @@
   no trend, BTC filter, leg/lookback/windows): all <= 0 except big legs. BTC (+0.21R) and UNI (+0.18R) positive all years.
 - Big legs (ifvg2_big.py): G6 0.00R; G7 +0.19R n=79 2.2/mo, years +0.06/+0.27/+0.27, IS +0.12 OS +0.39; G8 +0.21R n=28;
   G8 at 2R -0.12R (1.5R better). Same pocket as v1. t ~1.4 after ~40 variants -> PROBATION (watch + user journal).
+- Daily regime split (ifvg2_regime.py; Kaufman ER on 10/20/30 completed days + daily EMA20/50). Base: healthy trend
+  -0.08..-0.14R, knife -0.07..-0.16R, chop -0.08..-0.16R, counter-trend -0.23R (20/30d). Daily EMA agrees -0.06R vs
+  disagrees -0.19R. Legs>=6 ATR: no bucket consistent across windows. Regime filter does not make v2 positive. REJECT.
