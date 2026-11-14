@@ -1,0 +1,4 @@
+open_time_sgt,close_time_sgt,coin,side,lev,entry,exit,pnl_usdt,pnl_pct_margin,stop,risk_usdt,r_multiple,setup,notes
+2026-11-11 15:56:56,2026-11-13 08:36:20,BTC,short,5,74120.8,70844.6,357.10,22.10,,,,4h leg -> fib -> 1h iFVG,
+2026-11-11 22:02:58,2026-11-13 19:17:49,HYPE,short,5,73.53,73.60,-3.53,-0.47,,,,4h leg -> fib -> 1h iFVG,scratch
+2026-11-14 04:29:33,2026-11-14 13:45:11,SUI,short,5,0.80,0.77,235.99,18.94,,,,4h leg -> fib -> 1h iFVG,
