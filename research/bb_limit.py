@@ -90,7 +90,7 @@ def run(sym, n_bb=20, k_bb=2.0, key='hz', confirm='reject', lim='close+0.25', bu
             if f is None:
                 continue
             d = abs(e - stp)
-            if (e - stp) * side >= 0:
+            if (stp - e) * side >= 0:                         # stop must sit on the losing side of the fill
                 continue
             tp = e + side * (tgt * (d + FRT * e) + FRT * e)
             flat = perps.next_weekend_stop(b1[f][0], SCH); px = None

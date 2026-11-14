@@ -106,3 +106,13 @@
 - VERDICT: REJECT for the ticket book (executable version fails OS; t~2 after ~50 variants and coin selection).
   Withdraw the book_bb.py add-on. Next (specific): 4h-clock entry at the scan right after the setup candle
   (BB20 touch + 4h EMA50 bias + hz level, no 1h pattern), stop beyond setup extreme - tests the context directly.
+
+## 2026-11-14 BB set-and-forget limit ticket (bb_limit.py; first run had a stop-side bug -> 0 trades, fixed)
+- Ticket at the 08/12/16/20 check-in after the setup candle, limit / stop beyond extreme+0.25ATR / 1.5R, valid 8h.
+  4h confirm none: ~0R; 'reject' (close back inside band and below the level): -0.14..+0.04R; 'red' candle:
+  limit at close +0.12R (6.9/mo) / close+0.25ATR +0.12R / wick +0.11R, but OS (since 2025-12-18) -0.02..+0.05R and
+  year 3 +0.02..+0.07. Every variant fades out-of-sample. REJECT for the ticket book; ticket book stays Q + CRT.
+## 2026-11-14 Forward projection (projection.py): weekly-block MC from the last 12 months / since 1 May 2026
+- Last 12m: Q 5.9/mo 65% +0.57R; CRT 2.1/mo 60% +0.41R. Since May: Q 8.4/mo +0.55R; CRT 2.0/mo +0.20R.
+- Combined (last 12m), flat 1.5% eval: 1 month median +1.4R (+$1.1k) [5%: -3.4R, 95%: +20R], P(loss) 31%;
+  3 months median +9.8R (+$7.4k), P(+8%) 65%; 6 months median +23R (+$17k), P(loss) 6%. No position caps / guards.
