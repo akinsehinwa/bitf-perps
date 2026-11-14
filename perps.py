@@ -1322,6 +1322,14 @@ def cmd_scan(cfg, a):
     print("Scan of the %s bar that closed %s SGT, %d symbols, BTC trend %s (feed: %s; confirm on BINANCE:<SYM>USDT.P)." % (
         st["interval"], close_sgt, len(syms), {1: "up: longs only", -1: "down: shorts only"}.get(btc_trend, "?"), feed))
     if vexp is not None:
+        vs = load_json(path("vol_state.json"), {})
+        now_state = "expanding" if vexp else "contracting"
+        if vs.get("state") and vs["state"] != now_state:
+            print("*** BTC VOLATILITY SWITCHED: %s -> %s (since %s). New tickets are sized %s. ***" % (
+                vs["state"].upper(), now_state.upper(), vs.get("since", "?"), "UP (full risk)" if vexp else "DOWN (half risk)"))
+            vs = {}
+        if vs.get("state") != now_state:
+            save_json(path("vol_state.json"), {"state": now_state, "since": close_sgt + " SGT"})
         print("BTC 7-day volatility: %s -> risk x%.2f (Q %.2f%%, CRT %.2f%% of the account before guards)." % (
             "EXPANDING" if vexp else "contracting", vm, cfg["risk"]["stage1_risk_pct"] * vm,
             cfg["risk"]["stage1_risk_pct"] * vm * cfg["risk"].get("setup_risk_mult", {}).get("crt4h", 1.0)))
