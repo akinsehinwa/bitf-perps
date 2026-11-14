@@ -86,7 +86,7 @@ def structure(b1, a1, minleg, look=120):
 
 
 def run(sym, look=120, minleg=2.0, G=3.0, W=48, V=12, inv=0.786, stop='ext', buf=0.5, tgt=1.5, liq=False, c4=False,
-        trend=True, hold=96, btc=False, CHK=None):
+        trend=True, hold=96, btc=False, CHK=None, entry='ifvg', zone_valid=24):
     b1 = load(sym, '1h'); b4 = load(sym, '4h')
     if len(b1) < 3000:
         return []
@@ -124,7 +124,11 @@ def run(sym, look=120, minleg=2.0, G=3.0, W=48, V=12, inv=0.786, stop='ext', buf
                 fv.append((b1[j][2], b1[j - 2][3]))
         rx = max(x[2] for x in b1[Ei:m0 + 1]) if side == -1 else min(x[3] for x in b1[Ei:m0 + 1])
         sig = None
-        for m in range(m0, min(len(b1) - 1, m0 + W)):
+        zstop = None
+        if entry.startswith('zone'):                  # two conditions only: limit straight into the zone
+            f = float(entry[4:]) / 1000 if len(entry) > 4 else 0.5
+            sig = (m0, E - side * f * size); zstop = inv_px - side * buf * a; V = zone_valid
+        for m in (range(m0, min(len(b1) - 1, m0 + W)) if sig is None else []):
             x = b1[m]
             if m > m0:
                 if side == -1 and b1[m][3] > b1[m - 2][2]:
@@ -144,7 +148,7 @@ def run(sym, look=120, minleg=2.0, G=3.0, W=48, V=12, inv=0.786, stop='ext', buf
         t_place = b1[m][0] + H
         if perps.in_weekend(t_place, SCH):
             continue
-        stp = (rx + (-side) * buf * a) if stop == 'ext' else (O + (-side) * 0.1 * a)
+        stp = zstop if zstop is not None else ((rx + (-side) * buf * a) if stop == 'ext' else (O + (-side) * 0.1 * a))
         if (lim - stp) * side <= 0 or abs(lim - stp) / lim < 0.002:
             continue
         n = e = None
@@ -193,6 +197,7 @@ def run(sym, look=120, minleg=2.0, G=3.0, W=48, V=12, inv=0.786, stop='ext', buf
         if px is None:
             px, why = b1[q][4], 'time'
         out.append({'sym': sym, 'side': side, 't_in': b1[n][0], 't_out': b1[q][0] + H, 'exit': why, 'e': e, 'stp': stp,
+                    'sig_t': b1[m][0] + H, 'arm_t': b1[m0][0] + H,
                     'r': (side * (px - e) / e - FRT) / (d / e + FRT), 'stop_frac': d / e})
         busy = b1[q][0] + H
     return out
