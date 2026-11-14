@@ -421,7 +421,7 @@ def risk_budget(cfg, stage, realized, realized_today, open_risk, open_notional, 
     return risk, why
 
 
-def size_trade(cfg, entry, stop, risk_usd, open_notional, fee=None, side=None):
+def size_trade(cfg, entry, stop, risk_usd, open_notional, fee=None, side=None, max_pos=None):
     """Quantity so a stop-out (fees, spread and slippage included) loses risk_usd."""
     acct = cfg["account_size"]
     R, F, S = cfg["risk"], cfg["firm"], cfg["strategy"]
@@ -434,6 +434,8 @@ def size_trade(cfg, entry, stop, risk_usd, open_notional, fee=None, side=None):
     caps = {"risk": notional,
             "per-position margin %d%%" % R["max_position_margin_pct"]: R["max_position_margin_pct"] / 100 * acct * lev,
             "total margin %d%%" % R["max_margin_pct"]: max(0.0, R["max_margin_pct"] / 100 * acct * lev - open_notional)}
+    if max_pos:
+        caps["Bitfunded max position $%s" % format(int(max_pos), ",")] = max_pos   # treated as USDT notional (conservative)
     limit = min(caps, key=caps.get)
     notional = caps[limit]
     qty = notional / entry
@@ -1045,7 +1047,8 @@ def ticket(cfg, j, sym, side, entry, stop, target=None, setup="manual", mult=1.0
     if risk <= 0:
         return None, "BLOCK: " + why
     costs = symbol_costs(cfg, sym)
-    sz = size_trade(cfg, entry, stop, risk, st["open_notional"], costs["fee"], costs["side"] + slip)
+    sz = size_trade(cfg, entry, stop, risk, st["open_notional"], costs["fee"], costs["side"] + slip,
+                    load_markets().get(sym, {}).get("max_position"))
     lot = instrument(sym)["lot"]
     qty = math.floor(sz["qty"] / lot + 1e-9) * lot                         # round DOWN: risk never above budget
     if qty < lot:

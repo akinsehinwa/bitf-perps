@@ -175,3 +175,9 @@
   1.75% $15.7k | 2.0% $17.4k | 2.5% $18.2k | 3.0% $19.7k (worst10% $15.0k; 1.7 funded accounts/yr, 53% of time funded).
 - The user's framing holds: blowing faster and re-buying evals earns as much or more than nursing one account.
   1.5-3% all ~$17-20k/yr (differences within noise; 119 overlapping starts on 3y of data). Keep 1.5% funded.
+## 2026-11-14 Bitfunded max position per coin vs account size
+- Max position (instrument API maxPosition, treated as USDT notional): BTC 400k ETH 330k BNB 200k SOL 200k XRP 100k
+  LTC 80k ADA 75k UNI 70k AVAX 70k LINK 50k. Full 1.75% ticket at the median stop needs ~0.45-0.9x the account size
+  in notional; tight stops up to ~1.9x. 150K: BTC/ETH/SOL fit; BNB/XRP/ADA/UNI capped on tight stops; LINK/AVAX/LTC
+  capped even at median stops. 100K: all fit at median except LINK; tight stops capped on ADA/UNI/LINK/AVAX/LTC.
+- Bot now caps size at the coin's max position and says so ("sized by Bitfunded max position").
