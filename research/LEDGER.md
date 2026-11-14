@@ -116,3 +116,7 @@
 - Last 12m: Q 5.9/mo 65% +0.57R; CRT 2.1/mo 60% +0.41R. Since May: Q 8.4/mo +0.55R; CRT 2.0/mo +0.20R.
 - Combined (last 12m), flat 1.5% eval: 1 month median +1.4R (+$1.1k) [5%: -3.4R, 95%: +20R], P(loss) 31%;
   3 months median +9.8R (+$7.4k), P(+8%) 65%; 6 months median +23R (+$17k), P(loss) 6%. No position caps / guards.
+## 2026-11-14 Slot rules (slots.py): first tickets to fill get the slots
+- 3y: all tickets 7.4/mo 57% +0.38R +103R dd 9.9R; 2/day 54% +0.26R +55R; 2 open 53% +0.27R +58R; 3 open +0.31R +73R.
+  Last 12m: all +0.52R +46R vs 2/day +0.32R +19R. Busy days (many coins firing) carry the best trades; capping by
+  first-to-fill drops them. Days with 3+ fills: 25 of 160. REJECT slot caps below 3; keep all tickets with the guards.
