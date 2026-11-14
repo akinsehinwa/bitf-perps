@@ -44,7 +44,7 @@ def bias_at(sym, t):
 
 
 def run(sym, bias='daily', key='swing', pat=('engulf', 'pin', 'ifvg'), W=8, buf=0.25, tgt=1.5, n_bb=13, k_bb=2.0,
-        look=180, frac=3, hold=48, sides=(1, -1), touches=3, hz_look=540, tol=0.25):
+        look=180, frac=3, hold=48, sides=(1, -1), touches=3, hz_look=540, tol=0.25, lv_tf='4h'):
     b4 = load(sym, '4h'); b1 = load(sym, '1h')
     if len(b4) < 400:
         return []
@@ -54,6 +54,19 @@ def run(sym, bias='daily', key='swing', pat=('engulf', 'pin', 'ifvg'), W=8, buf=
     ph = [i for i in range(frac, len(b4) - frac) if hi[i] > max(hi[i - frac:i]) and hi[i] > max(hi[i + 1:i + 1 + frac])]
     pl = [i for i in range(frac, len(b4) - frac) if lo[i] < min(lo[i - frac:i]) and lo[i] < min(lo[i + 1:i + 1 + frac])]
     ema50 = perps.ema(c, 50)
+    if lv_tf == '2h':                            # levels from 2h swing points (built from 1h bars)
+        b2 = []
+        for n in range(0, len(b1) - 1):
+            if (b1[n][0] // H) % 2 == 0 and b1[n + 1][0] == b1[n][0] + H:
+                b2.append((b1[n][0], max(b1[n][2], b1[n + 1][2]), min(b1[n][3], b1[n + 1][3])))
+        t2 = [x[0] for x in b2]
+        pv2 = []                                 # (confirm time, price)
+        for q in range(frac, len(b2) - frac):
+            if b2[q][1] > max(x[1] for x in b2[q - frac:q]) and b2[q][1] > max(x[1] for x in b2[q + 1:q + 1 + frac]):
+                pv2.append((b2[q + frac][0] + 2 * H, b2[q][1]))
+            if b2[q][2] < min(x[2] for x in b2[q - frac:q]) and b2[q][2] < min(x[2] for x in b2[q + 1:q + 1 + frac]):
+                pv2.append((b2[q + frac][0] + 2 * H, b2[q][2]))
+        pv2.sort(); ct2 = [x[0] for x in pv2]
     out = []; busy = 0
     for i in range(max(60, n_bb), len(b4) - 1):
         T = b4[i][0] + H4
@@ -83,9 +96,12 @@ def run(sym, bias='daily', key='swing', pat=('engulf', 'pin', 'ifvg'), W=8, buf=
                 r = REG.get(b4[i][0])
                 if r is None or (r > 0) != (side == 1):
                     continue
-            if key == 'hz':                          # horizontal S/R: >= touches 4h swing points (highs or lows)
-                pts = [hi[q] for q in ph[bisect.bisect_left(ph, i - hz_look):] if q + frac <= i - 1] + \
-                      [lo[q] for q in pl[bisect.bisect_left(pl, i - hz_look):] if q + frac <= i - 1]
+            if key == 'hz':                          # horizontal S/R: >= touches swing points (highs or lows)
+                if lv_tf == '2h':
+                    pts = [x[1] for x in pv2[bisect.bisect_left(ct2, b4[i][0] - hz_look * H4):bisect.bisect_right(ct2, b4[i][0])]]
+                else:
+                    pts = [hi[q] for q in ph[bisect.bisect_left(ph, i - hz_look):] if q + frac <= i - 1] + \
+                          [lo[q] for q in pl[bisect.bisect_left(pl, i - hz_look):] if q + frac <= i - 1]
                 ok = False
                 for px in pts:
                     if lo[i] <= px <= hi[i] and sum(abs(o - px) <= tol * a for o in pts) >= touches:
