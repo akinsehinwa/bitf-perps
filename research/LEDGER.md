@@ -133,3 +133,9 @@
 - Last 12m, flat 1.5%: core uncapped 8/mo +0.53R +4.2R/mo; core capped (3 open, 3/day) +2.2R/mo; all-72 uncapped
   50/mo +0.19R +9.7R/mo but worst-5% month -26R (fails any eval); all-72 capped 22.5/mo +0.11R +2.6R/mo, worst 5% -7.7R.
 - Best non-core by Q+CRT R: AVAX LTC ARB WIF JASMY SEI ENS (n 8-20 each, selection risk). Core laggards: HYPE (-3.9R), ZEC.
+## 2026-11-14 Core-list swaps (core_swap.py; eval = live tilts, safe guards)
+- live core 10: 7.8/mo +0.38R +2.98R/mo dd 8.9R | eval 95% med 163d E 186d.  core 8 (no HYPE/ZEC): +0.43R, dd 7.7R,
+  95% / 171d / 194d. HYPE CRT -0.46R (n9); ZEC Q +0.77R (n5) / CRT +0.06R (n16).
+- + rule picks (corr>=0.70 & vol<100%: AVAX DOGE ENS FLOKI LTC SUI VIRTUAL): more R/mo but dd 10-15R, pass 86-88%.
+- core 8 + AVAX + LTC: 8.4/mo +0.45R +3.80R/mo dd 8.4R | 95% / 149d / E 155d (best balance; mild hindsight -
+  both coins pass the rule and the results). + DOGE: 94% / 148d / 165d. Cherry-picked top 5: 95% / 149d / 159d.
