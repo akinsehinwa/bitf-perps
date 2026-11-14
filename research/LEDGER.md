@@ -69,3 +69,5 @@
 - 1h ENGULFING only is the edge: BB17 +0.06, BB20 +0.13 (8.4/mo, yrs +0.08/+0.18/+0.12, IS=OS), BB23 +0.13, BB25 +0.13,
   BB20 x2.5 +0.23 (3.9/mo), BB20 no level +0.11 (12.8/mo). Pin bars ~0. 6/9 coins positive (BTC +0.43, NEAR +0.27);
   LINK, HYPE negative; BNB/XRP/ZEC -0.06. ~50 variants tried. PROBATION: next = reviewer audit + book sim with Q/CRT.
+- 2h-swing key levels (bb_v5.py): engulf BB20 +0.13R (4h levels) -> +0.09R (2h levels, 11.6/mo); same with stricter
+  touches/tolerance; any-pattern +0.05 -> +0.03R. More levels = more trades of lower quality. REJECT; keep 4h levels.
