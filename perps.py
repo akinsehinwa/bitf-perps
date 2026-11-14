@@ -435,7 +435,7 @@ def size_trade(cfg, entry, stop, risk_usd, open_notional, fee=None, side=None, m
             "per-position margin %d%%" % R["max_position_margin_pct"]: R["max_position_margin_pct"] / 100 * acct * lev,
             "total margin %d%%" % R["max_margin_pct"]: max(0.0, R["max_margin_pct"] / 100 * acct * lev - open_notional)}
     if max_pos:
-        caps["Bitfunded max position $%s" % format(int(max_pos), ",")] = max_pos   # treated as USDT notional (conservative)
+        caps["Bitfunded max position $%s" % format(int(max_pos), ",")] = max_pos   # USDT notional (confirmed by the user 2026-11-14)
     limit = min(caps, key=caps.get)
     notional = caps[limit]
     qty = notional / entry
