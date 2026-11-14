@@ -155,3 +155,9 @@
 - book_swing.py (new core 10 Q+CRT + swing all 72): x0.5 93% pass, median 100d, E 120d (vs 95% / 149d / 155d);
   x1.0 76% / 66d. Live detector (perps.swing_setups) replayed vs backtest, 12 coins x 60 days: identical tickets
   after matching history (800 1h bars) and weekend handling.
+## 2026-11-14 Swing timing (swing_timing.py, all 72, G7)
+- Midline retest after the 1h inversion: 46% within 1h, 78% within 4h, 100% within 12h (median 1h).
+- Instant fills before the next check-in: last 12m +0.18R (n116), prior 2y +0.03R (n276) - not consistently the best.
+- Check-in ticket +0.16R / +0.16R (14.4/mo) vs instant +0.12 / +0.07R: at the check-in the limit often fills at once at
+  a better price (retracement continued) or on a later retest. Zone 50% limit without the gap (2 conditions):
+  +0.16R / +0.09R, 17.8/mo; zone 61.8% +0.15 / -0.00R. KEEP the 3-condition check-in ticket.
