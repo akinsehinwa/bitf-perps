@@ -63,7 +63,7 @@ DEFAULT_CONFIG = {
         "tz": "Asia/Singapore (UTC+8), same clock as Bitfunded's daily reset",
         "tz_offset_hours": 8,
         "scan_hours": [8, 20, 0],
-        "skip_days": ["Mon"],
+        "skip_days": ["Mon", "Sat", "Sun"],          # Q only (2026-11-14 slot study: Mon/Sat/Sun negative in both periods)
         "weekend_stop": "Sat 04:00",
         "weekend_resume": "Sun 20:00",
         "flat_for_weekend": False,
@@ -79,7 +79,8 @@ DEFAULT_CONFIG = {
         "min_body_atr": 1.0,
         "aplus_breadth": 3,
         "crt": {"enabled": True, "hours": [8, 12, 16, 20], "body": 0.7, "min_range_atr": 1.0,
-                "min_rr": 1.0, "buf_atr": 0.1, "btc_daily_filter": True, "slippage_pct": 0.05, "hold_hours": 24},
+                "min_rr": 1.0, "buf_atr": 0.1, "btc_daily_filter": True, "slippage_pct": 0.05, "hold_hours": 24,
+                "skip_days": ["Fri", "Sat"]},
         "swing": {"enabled": True, "symbols": "all", "hours": [8, 12, 16, 20], "risk_mult": 0.5,
                   "min_leg_atr": 7.0, "pivot_leg_atr": 2.0, "leg_lookback_h": 120, "window_h": 48,
                   "valid_h": 12, "invalidate": 0.786, "stop_buf_atr": 0.5, "hold_hours": 96},
@@ -202,6 +203,14 @@ def _wm(spec):
 def in_weekend(ms, sch):
     if not sch.get("weekend_pause", True):
         return False                           # 2026-11-14: user trades 7 days a week, same check-ins
+    d = local_dt(ms, sch["tz_offset_hours"])
+    wm = d.weekday() * 1440 + d.hour * 60 + d.minute
+    a, b = _wm(sch["weekend_stop"]), _wm(sch["weekend_resume"])
+    return a <= wm < b if a < b else (wm >= a or wm < b)
+
+
+def in_tested_weekend(ms, sch):
+    """The Sat 04:00 - Sun 20:00 SGT window that every backtest excluded (used even with weekend_pause off)."""
     d = local_dt(ms, sch["tz_offset_hours"])
     wm = d.weekday() * 1440 + d.hour * 60 + d.minute
     a, b = _wm(sch["weekend_stop"]), _wm(sch["weekend_resume"])
@@ -1317,7 +1326,7 @@ def cmd_scan(cfg, a):
             "EXPANDING" if vexp else "contracting", vm, cfg["risk"]["stage1_risk_pct"] * vm,
             cfg["risk"]["stage1_risk_pct"] * vm * cfg["risk"].get("setup_risk_mult", {}).get("crt4h", 1.0)))
     if not scheduled:
-        print("Note: this close is not a scheduled scan (%s SGT). Tickets are for information; the backtest only takes scheduled closes." % (
+        print("Q: this close is not a Q close (%s SGT, skip days apply); Q tickets are withheld." % (
             ", ".join("%02d:00" % h for h in sch["scan_hours"])))
     if failed:
         print("No fresh data for (skipped): " + ", ".join(failed))
@@ -1342,6 +1351,10 @@ def cmd_scan(cfg, a):
     for k, (s, sig, t, err, line) in enumerate(found, 1):
         if not t:
             print("Q %s %s %s: %s" % (sig["side"], s, sig["setup"], err))
+            continue
+        if not scheduled:
+            print("Q %s %s: skipped - Q only trades the %s SGT closes, not %s." % (sig["side"], s,
+                  "/".join("%02d" % h for h in sch["scan_hours"]), "/".join(sch.get("skip_days", []))))
             continue
         t["breadth"] = breadth
         if breadth >= st.get("aplus_breadth", 99):
@@ -1369,7 +1382,10 @@ def cmd_scan(cfg, a):
             crt_found = keep
     if crt_cfg.get("enabled"):
         crt_hour = local_dt(close_ms, off).hour in crt_cfg["hours"]
-        if not crt_hour:
+        if WD[local_dt(close_ms, off).weekday()] in crt_cfg.get("skip_days", []):
+            print("CRT: no CRT on %s (negative in both test periods)." % WD[local_dt(close_ms, off).weekday()])
+            crt_hour = False
+        elif not crt_hour:
             print("CRT: this close is not a CRT scan (%s SGT)." % ", ".join("%02d:00" % h for h in crt_cfg["hours"]))
         elif not crt_found:
             print("CRT: no 4h candle-range setups with the BTC trend.")
@@ -1390,7 +1406,9 @@ def cmd_scan(cfg, a):
             cands.append([None, 1, t])
     sw = st.get("swing", {})
     if sw.get("enabled") and btc:
-        if local_dt(close_ms, off).hour not in sw["hours"]:
+        if in_tested_weekend(close_ms, sch):
+            print("SWING: off from Sat 04:00 to Sun 20:00 SGT (never tested there).")
+        elif local_dt(close_ms, off).hour not in sw["hours"]:
             print("SWING: this close is not a swing check-in (%s SGT)." % ", ".join("%02d:00" % h for h in sw["hours"]))
         else:
             prev = close_ms - HOUR_MS                  # the previous check-in hour (weekend inversions lapse, as tested)

@@ -161,3 +161,8 @@
 - Check-in ticket +0.16R / +0.16R (14.4/mo) vs instant +0.12 / +0.07R: at the check-in the limit often fills at once at
   a better price (retracement continued) or on a later retest. Zone 50% limit without the gap (2 conditions):
   +0.16R / +0.09R, 17.8/mo; zone 61.8% +0.15 / -0.00R. KEEP the 3-condition check-in ticket.
+## 2026-11-14 Q / CRT slots on the new core 10 (slots_hours.py), every 4h close allowed
+- Q by hour (last 12m | prior 2y): 00 +0.49|+0.17, 04 -0.38|+0.18, 08 +0.18|+0.30, 12 +0.22|-0.30, 16 +0.14(7)|-0.06,
+  20 +0.51|+0.17 -> keep 00/08/20. Q by day: Mon -0.55|-0.16, Sat -0.11|-0.26, Sun +0.02|-0.17 -> skip Mon/Sat/Sun.
+- CRT by hour fine (08-20); by day Fri -0.21|-0.35, Sat -1.00(4)|-0.19 -> skip Fri/Sat.
+- Bot: 7-day check-ins, Q withheld outside its hours/days, CRT skip days, swing off in the tested weekend window.

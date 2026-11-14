@@ -48,8 +48,11 @@ python3 "${CLAUDE_SKILL_DIR}/perps.py" backtest --all --detail
 The user checks in every day, weekends included, at 08:00, 12:00, 16:00, 20:00 and
 00:00 SGT (`schedule.checkins`); the weekend pause is OFF (`weekend_pause: false`,
 `flat_for_weekend: false`). Each strategy still only issues tickets at its own tested
-hours (Q 08/20/00, not Mondays; CRT and swing 08-20). Weekend trading was never in
-the backtests: treat weekend tickets as untested.
+hours and days, re-checked on the new core 10 (research/slots_hours.py, last 12
+months | prior 2 years): Q 00:00 +0.49|+0.17R, 08:00 +0.18|+0.30, 20:00 +0.51|+0.17
+(04/12/16 weaker), and Q skips Mon (-0.55|-0.16), Sat (-0.11|-0.26), Sun (+0.02|-0.17).
+CRT keeps 08-20 and skips Fri (-0.21|-0.35) and Sat. Swing stays off from Sat 04:00 to
+Sun 20:00 (never tested). So weekends are mostly quiet by design.
 
 ## The strategy: "4h quality breakout, with BTC"
 
