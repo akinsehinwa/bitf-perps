@@ -45,7 +45,8 @@ python3 "${CLAUDE_SKILL_DIR}/perps.py" backtest --all --detail
 
 ## The strategy: "4h quality breakout, with BTC"
 
-1. **What:** BTC ETH BNB XRP SOL HYPE ZEC ADA UNI LINK.
+1. **What:** BTC ETH BNB XRP SOL ADA UNI LINK AVAX LTC (since 2026-11-14:
+   HYPE and ZEC out, AVAX and LTC in; see "Coin list" below).
 2. **When:** three 4h candle closes, Singapore time: 08:00 (daily open),
    20:00 (pre-New York), 00:00 (New York session). No 16:00 scan (it lost
    money in every period). No new entries on Monday (SGT). Nothing from Sat
@@ -60,11 +61,13 @@ python3 "${CLAUDE_SKILL_DIR}/perps.py" backtest --all --detail
 6. **Entry (1h):** a LIMIT order 0.5 x ATR back toward the breakout, valid
    8 hours. Not filled by then: cancel, no trade.
 7. **Stop:** the signal close -/+ 2.0 x ATR (1.5 ATR from the limit).
-   **Target:** 2R from the fill. **Time stop:** 48 hours after the fill, or
+   **Target:** 1.5R from the fill (after fees; 2R tested +0.43R vs 1.5R +0.41R
+   with a higher win rate). **Time stop:** 48 hours after the fill, or
    the weekend close, whichever comes first.
-8. **Size (volatility tilt):** 2% of the account at risk per trade when BTC's
-   7-day realized volatility is EXPANDING (stdev of the last 42 closed 4h
-   returns above the 42 before), 1% when it is contracting. Fees included,
+8. **Size (volatility tilt):** 1.5% of the account at risk per trade in the
+   eval (1% once funded) when BTC's 7-day realized volatility is EXPANDING
+   (stdev of the last 42 closed 4h returns above the 42 before), half that
+   when it is contracting. Fees included,
    isolated 5x, max 3 open, max 3 new a day, one position per coin. The scan
    header prints the state and the risk.
 
@@ -106,7 +109,7 @@ Runs in the same `scan`, at the 08:00, 12:00, 16:00 and 20:00 SGT 4h closes
    floor of the range for a short). Skipped below 1R.
 5. **BTC daily filter:** BTC's daily EMA20 must agree with the side (EMA20 >
    EMA50 for longs, below for shorts); without it the first year lost money.
-6. **Size:** half of Q's: 1% (volatility expanding) / 0.5% (contracting),
+6. **Size:** 0.75 x Q's: 1.125% (volatility expanding) / 0.56% (contracting),
    with 0.05% stop-order slippage built into the size. **Time stop:** 24h.
    Weekend close as Q. A coin that already has a Q ticket in the same scan is
    skipped (one position per coin); tickets beyond the free slots are skipped.
@@ -120,13 +123,35 @@ probation: cut it (`"crt": {"enabled": false}`) if `tune` shows it below 0R
 after 20 trades. Rejected: entering at C3's open, a 15m CRT confirmation,
 1h/2h CRT, sweeps into prior daily/4h levels.
 
+## Ticket order: setup grade (both strategies)
+
+Every ticket carries a grade from its running room: the distance from the entry
+to the nearest untouched 4h swing in the trade direction, in R.
+**A+** = 3R or more of room (backtest +0.53R/trade); **A** = clear air or
+blocked under 1.5R (+0.39 / +0.41R: breakouts often run straight through);
+**B** = 1.5-3R (+0.25R). Tickets print best-first (grade, then Q before CRT).
+The grade orders tickets; it never skips one. Take every ticket the slots allow:
+capping to the first 1-2 a day halved profit (the busiest days are the best).
+
+## Coin list (2026-11-14)
+
+All 72 Bitfunded crypto perps were run through Q and CRT. Q's per-coin results
+track how closely a coin follows BTC (rank-corr +0.47) and fall with volatility
+(-0.35). HYPE (CRT -0.46R) and ZEC track BTC least of the old core and were
+dropped; AVAX and LTC (BTC correlation 0.73 / 0.71, volatility 72% / 56%) were
+added. Last 12 months: 107 trades, +0.55R, +4.9R a month, max drawdown 8.4R.
+The other 62 coins: Q +0.15R, CRT about 0R; all 72 at once would fail an eval
+on a bad month (worst 5% month -26R).
+
 ## What to expect (both strategies together)
 
-Challenge simulation, Q + CRT with the volatility tilt, realistic fills,
-3 years of history: both stages passed 95% of rolling start dates (median
-~146 days); Monte Carlo of 3,000 resampled 60-week histories: 91% pass,
-median ~128 days, about 1 in 4 passes inside ~2 months. Q alone: 95% /
-~186 days (MC 87% / ~156 days). There is no setting that reliably passes
+Challenge simulation (2026-11-14 settings: 10 coins above, 1.5% eval risk with
+the volatility tilt, CRT x0.75, guards below), realistic fills, 3 years of
+history: both stages passed about 95% of rolling start dates, median ~149 days,
+about 155 days per funded account counting retries. Forward Monte Carlo from the
+last 12 months (flat 1.5%, no guards): 1 month median +1.4R (5% worst -3.4R),
+3 months median +9.8R (65% chance of +8%), 6 months median +23R. Funded at 1%:
+about +$570 a month to you at the median (80% split), worst 5% -$1.4k. There is no setting that reliably passes
 in two weeks; raising risk mostly raises the failure rate. Results are
 history, not a promise.
 
@@ -173,7 +198,7 @@ history, not a promise.
 - **Staleness:** a coin whose latest closed 4h candle is not the one that just
   closed is skipped; stale BTC data stops the whole scan (no tickets).
 - **Fees-included target:** take-profit = entry +/- (2 x (stop distance +
-  0.08% round-trip fees) + 0.08%), so a hit nets a full 2R after fees. The
+  0.08% round-trip fees) + 0.08%) with R = 1.5, so a hit nets 1.5R after fees. The
   backtest uses the same target.
 - **Rounding to Bitfunded's contract:** quantity rounded DOWN to the
   instrument's lot (e.g. BTC 0.001, XRP 10), so the loss at the stop never
@@ -185,14 +210,15 @@ history, not a promise.
 ## Guards (all enforced in code)
 
 - Loss at every open stop + realized loss today <= the daily guard (default
-  3.5% vs the firm's 5%), so a full stop-out day cannot break the daily rule.
-- The same sum against the max-loss floor, with a 1.5% buffer.
-- Max 3 open positions (firm: 5), open risk <= the cap, total margin <= 50%
-  (firm: 65%), one position per asset, no hedging.
+  4.25% vs the firm's 5%), so a full stop-out day cannot break the daily rule.
+- The same sum against the max-loss floor, with a 1.0% buffer.
+- Max 3 open positions (firm: 5), open risk <= 4.5%, total margin <= 60%
+  (firm: 65%) and <= 30% per position, one position per asset, no hedging.
 - Max 3 new trades per Bitfunded day (00:00 SGT).
 - No entries from Sat 04:00 to Sun 20:00 SGT; positions are closed by Sat
   04:00 SGT.
-- Finish-line sizing: near the target, risk shrinks to what the last win needs.
+- Finish-line sizing is OFF (it slowed passes in the 2026-11-13 risk study);
+  risk halves while the stage is down more than 3%.
 - Profit target counts realized P&L only and needs 2 closed trades held 10+
   minutes; close everything to advance (stage moves 30 minutes after flat).
 

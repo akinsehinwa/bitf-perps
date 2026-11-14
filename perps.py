@@ -32,7 +32,7 @@ STATE = os.environ.get("PERPS_DIR") or os.path.join(os.getcwd(), "trader", "perp
 UA = "bitfunded-perps/1.0"
 
 MAJORS = ["BTC", "ETH", "BNB", "XRP", "SOL", "TRX", "HYPE", "ZEC", "DOGE", "ADA"]  # Bitfunded's 10-day-hold list
-WATCHLIST = ["BTC", "ETH", "BNB", "XRP", "SOL", "HYPE", "ZEC", "ADA", "UNI", "LINK"]
+WATCHLIST = ["BTC", "ETH", "BNB", "XRP", "SOL", "ADA", "UNI", "LINK", "AVAX", "LTC"]   # 2026-11-14: HYPE/ZEC out, AVAX/LTC in
 
 DEFAULT_CONFIG = {
     "account_size": 50000,
@@ -84,7 +84,7 @@ DEFAULT_CONFIG = {
         "ema_slow": 200,
         "atr": 14,
         "atr_stop": 2.0,
-        "target_r": 2.0,
+        "target_r": 1.5,
         "rsi": 14,
         "rsi_pull": 40,
         "max_hold_bars": 12,
@@ -95,23 +95,23 @@ DEFAULT_CONFIG = {
         "slippage_pct_per_side": 0.0,
     },
     "risk": {
-        "stage1_risk_pct": 2.0,
-        "stage2_risk_pct": 2.0,
+        "stage1_risk_pct": 1.5,
+        "stage2_risk_pct": 1.5,
         "vol_tilt": {"enabled": True, "lookback_bars": 42, "contracting_mult": 0.5},
-        "setup_risk_mult": {"crt4h": 0.5},
-        "funded_risk_pct": 0.5,
+        "setup_risk_mult": {"crt4h": 0.75},
+        "funded_risk_pct": 1.0,
         "min_risk_pct": 0.25,
         "max_risk_pct": 2.5,
         "risk_mult": 1.0,
-        "daily_guard_pct": 3.5,
-        "max_loss_buffer_pct": 1.5,
+        "daily_guard_pct": 4.25,
+        "max_loss_buffer_pct": 1.0,
         "max_open_positions": 3,
-        "max_open_risk_pct": 3.0,
-        "max_margin_pct": 50,
-        "max_position_margin_pct": 25,
+        "max_open_risk_pct": 4.5,
+        "max_margin_pct": 60,
+        "max_position_margin_pct": 30,
         "drawdown_cut_pct": 3.0,
         "drawdown_cut_mult": 0.5,
-        "finish_line": True,
+        "finish_line": False,
         "min_stop_pct": 0.4,
     },
 }
@@ -1087,6 +1087,35 @@ def crt_setup(cfg, ind, i, btc_trend, close_ms):
     return side, trig, stop, tgt
 
 
+def room_r(ind, side, entry, stop, frac=3, look=540):
+    """Running room: entry -> nearest untouched 4h swing in the trade direction (fractal `frac`, confirmed, last
+    `look` bars, not traded through since), in R. None = clear air."""
+    h, l = ind["h"], ind["l"]; n = len(h); sgn = 1 if side == "long" else -1; risk = abs(entry - stop)
+    best = None
+    for p in range(max(frac, n - look), n - frac):
+        if sgn == 1:
+            px = h[p]
+            if not (px > max(h[p - frac:p]) and px > max(h[p + 1:p + 1 + frac])) or px <= entry or max(h[p + 1:]) >= px:
+                continue
+        else:
+            px = l[p]
+            if not (px < min(l[p - frac:p]) and px < min(l[p + 1:p + 1 + frac])) or px >= entry or min(l[p + 1:]) <= px:
+                continue
+        r = abs(px - entry) / risk
+        best = r if best is None else min(best, r)
+    return best
+
+
+def grade_of(room):
+    """Backtest 2026-11-14 (research/room.py): >=3R room +0.53R/trade, clear air +0.39, blocked <1.5R +0.41,
+    1.5-3R +0.25. Used to ORDER tickets, never to skip one."""
+    if room is not None and room >= 3:
+        return "A+", 0
+    if room is None or room < 1.5:
+        return "A", 1
+    return "B", 2
+
+
 def cmd_scan(cfg, a):
     st = cfg["strategy"]
     sch = cfg["schedule"]
@@ -1118,6 +1147,7 @@ def cmd_scan(cfg, a):
     vwhy = "BTC 7-day volatility %s" % ("expanding" if vexp else "contracting")
     st_raw = dict(st, min_body_atr=0)
     breadth = 0
+    inds = {}
     for s in syms:
         try:
             bars = btc if s == "BTC" else live_klines(s, st["interval"])[0]
@@ -1127,6 +1157,7 @@ def cmd_scan(cfg, a):
             failed.append(s)
             continue
         ind = indicators(bars, st)
+        inds[s] = ind
         i = len(bars) - 1
         if signal(ind, i, st_raw):
             breadth += 1
@@ -1155,6 +1186,7 @@ def cmd_scan(cfg, a):
             t, err = ticket(cfg, j, s, sig["side"], entry, stop, None, sig["setup"], vm, vwhy)
             if t:
                 t["order"] = ("LIMIT at %s, cancel if not filled by %s" % (fmt_px(entry), expiry)) if expiry else "MARKET"
+                t["room"] = room_r(ind, t["side"], t["entry"], t["stop"])
             found.append((s, sig, t, err, line))
         watch.append(line)
     print("Scan of the %s bar that closed %s SGT, %d symbols, BTC trend %s (feed: %s; confirm on BINANCE:<SYM>USDT.P)." % (
@@ -1185,22 +1217,15 @@ def cmd_scan(cfg, a):
 
     maxo = min(cfg["risk"]["max_open_positions"], cfg["firm"]["max_open_positions"])
     free = max(0, maxo - len(journal_state(cfg, j)["open"]))
-    issued = set()
+    cands = []                                   # (grade rank, strategy order, ticket)
     for k, (s, sig, t, err, line) in enumerate(found, 1):
-        if t and repeat(t):
+        if not t:
+            print("Q %s %s %s: %s" % (sig["side"], s, sig["setup"], err))
             continue
-        if t and len(sigs) >= free:
-            print("#%d %s %s skipped: no free slot (max %d open)." % (k, sig["side"], s, maxo))
-            continue
-        if t:
-            issued.add(s)
-            t["breadth"] = breadth
-            if breadth >= st.get("aplus_breadth", 99):
-                t["setup"] = t["setup"] + " A+ (%d coins breaking out together)" % breadth
-            print_ticket(cfg, t, k)
-            sigs.append(t)
-        else:
-            print("#%d %s %s %s: %s" % (k, sig["side"], s, sig["setup"], err))
+        t["breadth"] = breadth
+        if breadth >= st.get("aplus_breadth", 99):
+            t["setup"] = t["setup"] + " (%d coins breaking out together)" % breadth
+        cands.append([None, 0, t])
     crt_cfg = st.get("crt", {})
     btc_daily = None
     if crt_cfg.get("enabled") and crt_cfg.get("btc_daily_filter") and crt_found:
@@ -1222,21 +1247,17 @@ def cmd_scan(cfg, a):
                     print("CRT %s %s skipped: against BTC's daily trend (EMA20 %s EMA50)." % (h_[0], s_, ">" if btc_daily > 0 else "<"))
             crt_found = keep
     if crt_cfg.get("enabled"):
-        if local_dt(close_ms, off).hour not in crt_cfg["hours"]:
+        crt_hour = local_dt(close_ms, off).hour in crt_cfg["hours"]
+        if not crt_hour:
             print("CRT: this close is not a CRT scan (%s SGT)." % ", ".join("%02d:00" % h for h in crt_cfg["hours"]))
         elif not crt_found:
             print("CRT: no 4h candle-range setups with the BTC trend.")
-        for s, (side, trig, stop, tgt) in crt_found:
-            if local_dt(close_ms, off).hour not in crt_cfg["hours"]:
-                break
+        for s, (side, trig, stop, tgt) in (crt_found if crt_hour else []):
             cm = cfg["risk"].get("setup_risk_mult", {}).get("crt4h", 1.0)
-            if s in issued:
+            if any(c[2]["symbol"] == s for c in cands):
                 print("CRT %s %s skipped: %s already has a Q ticket this scan (one position per coin)." % (side, s, s))
                 continue
-            if len(sigs) >= free:
-                print("CRT %s %s skipped: no free slot (max %d open)." % (side, s, maxo))
-                continue
-            t, err = ticket(cfg, j, s, side, trig, stop, tgt, "crt4h", vm * cm, vwhy + ", CRT half size",
+            t, err = ticket(cfg, j, s, side, trig, stop, tgt, "crt4h", vm * cm, vwhy + ", CRT x%.2f" % cm,
                             crt_cfg.get("slippage_pct", 0.0) / 100, crt_cfg.get("hold_hours"))
             if err:
                 print("CRT %s %s: %s" % (side, s, err))
@@ -1244,10 +1265,26 @@ def cmd_scan(cfg, a):
             expiry = local_dt(close_ms + IV_MS[st["interval"]], off).strftime("%a %d %b %H:%M SGT")
             t["order"] = "%s STOP at %s (stop-limit), cancel if not triggered by %s (candle 3 close)" % (
                 "SELL" if side == "short" else "BUY", fmt_px(trig), expiry)
-            if repeat(t):
-                continue
-            print_ticket(cfg, t, len(sigs) + 1)
-            sigs.append(t)
+            t["room"] = room_r(inds[s], side, t["entry"], t["stop"]) if s in inds else None
+            cands.append([None, 1, t])
+    for c in cands:
+        g, rank = grade_of(c[2]["room"])
+        c[0] = rank
+        c[2]["grade"] = g
+    cands.sort(key=lambda c: (c[0], c[1]))
+    if len(cands) > 1:
+        print("Tickets ordered best-first: grade (A+ = 3R+ of room to the next 4h swing), then Q before CRT. Take them all if slots allow.")
+    for c in cands:
+        t = c[2]
+        if repeat(t):
+            continue
+        if len(sigs) >= free:
+            print("[%s] %s %s %s skipped: no free slot (max %d open)." % (t["grade"], t["side"], t["symbol"], t["setup"].split()[0], maxo))
+            continue
+        rm = "clear air (no untouched 4h swing in the way)" if t["room"] is None else "%.1fR to the next untouched 4h swing" % t["room"]
+        t["setup"] = "%s | grade %s: %s" % (t["setup"], t["grade"], rm)
+        print_ticket(cfg, t, len(sigs) + 1)
+        sigs.append(t)
     save_json(path("offered.json"), offered)
     save_json(path("signals.json"), {"as_of": now_iso(), "bar_close_sgt": close_sgt, "scheduled": scheduled, "signals": sigs})
     print("Next scans: " + ", ".join(local_dt(t, off).strftime("%a %H:%M") for t in next_scans(sch, 3)) + " SGT.")
