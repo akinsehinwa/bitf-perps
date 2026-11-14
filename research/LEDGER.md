@@ -52,3 +52,9 @@
   winners per rescue: Q +0.43 -> +0.36R, CRT +0.34 -> +0.28R, iFVG big +0.11 -> +0.07R. BE 0.5R worse; BE 1.5R ~neutral.
 - Partials (half at 0.5R/1R, with/without BE) raise win rate, cut avg R 15-50%, barely change 10-trade worst streaks.
 - 3R helps Q (+0.47R) but hurts CRT. No rule turns the iFVG rules positive. VERDICT: set the 2R target and leave it.
+
+## 2026-11-14 User strategy v2 (ifvg2.py): 50%-retracement swings (5-day legs), trend, 1h iFVG, stop ext+0.5ATR, 1.5R
+- 9 coins: 665 trades, 18/mo, win 38%, -0.12R. 20 variants (stop buffer/origin, 1/2R, liquidity filter, 4h-close wait,
+  no trend, BTC filter, leg/lookback/windows): all <= 0 except big legs. BTC (+0.21R) and UNI (+0.18R) positive all years.
+- Big legs (ifvg2_big.py): G6 0.00R; G7 +0.19R n=79 2.2/mo, years +0.06/+0.27/+0.27, IS +0.12 OS +0.39; G8 +0.21R n=28;
+  G8 at 2R -0.12R (1.5R better). Same pocket as v1. t ~1.4 after ~40 variants -> PROBATION (watch + user journal).
