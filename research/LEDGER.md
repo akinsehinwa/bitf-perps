@@ -46,3 +46,9 @@
   windows): all <= 0 except very large legs (>= 8 ATR). ifvg_big.py: k3 G8 +0.11R 5.4/mo but IS +0.01 / OS +0.45,
   year 1 -0.15; neighbours (G6/G10, k2.5/k4) scatter around 0; other 4 coins -0.07R. Winners by coin (SUI ETH ADA)
   look like selection. REJECT as a mechanical rule; big-leg pocket on WATCH (positive only in 2026).
+
+## 2026-11-14 Trade management lab (manage.py) - Q, CRT, iFVG rules, iFVG big legs
+- Full-stop losers that first reached +1R: Q 10%, CRT 5%, iFVG 16-19%. BE at 1R rescues those but stops out ~3-4
+  winners per rescue: Q +0.43 -> +0.36R, CRT +0.34 -> +0.28R, iFVG big +0.11 -> +0.07R. BE 0.5R worse; BE 1.5R ~neutral.
+- Partials (half at 0.5R/1R, with/without BE) raise win rate, cut avg R 15-50%, barely change 10-trade worst streaks.
+- 3R helps Q (+0.47R) but hurts CRT. No rule turns the iFVG rules positive. VERDICT: set the 2R target and leave it.

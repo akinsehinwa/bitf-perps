@@ -184,7 +184,7 @@ def execute(sig, entry='atr:0.5', stop='sig:2', tr=2.0, pen=0.0, valid=8, hold=4
         px, why = rows[m][4], 'time'
     R = lambda p: (s * (p - e) / e - FRT) / (d / e + FRT)
     r = R(px) if not (part and half_done is not None) else (R(half_done) + R(px)) / 2
-    return {'filled': True, 'r': r, 'exit': why, 't_in': rows[n][0], 't_out': rows[m][0] + M15, 'sym': sig['sym'], 'side': s, 'stop_frac': d / e,
+    return {'filled': True, 'r': r, 'exit': why, 't_in': rows[n][0], 't_out': rows[m][0] + M15, 'sym': sig['sym'], 'side': s, 'stop_frac': d / e, 'e': e, 'stp': stp,
             'wait_h': (rows[n][0] - sig['close']) / H}
 
 

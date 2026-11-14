@@ -181,7 +181,7 @@ def run(sym, k=2.0, G=3.0, W=48, V=12, inv=0.786, stop='ext', tgt=2.0, btc=False
                 px, why = b1[q][4], 'time'
             r = (side * (px - e) / e - FRT) / (d / e + FRT)
             out.append({'sym': sym, 'side': side, 't_in': b1[n][0], 't_out': b1[q][0] + H, 'r': r, 'exit': why,
-                        'stop_frac': d / e, 'sig': t_place})
+                        'stop_frac': d / e, 'sig': t_place, 'e': e, 'stp': stp})
             busy = b1[q][0] + H
     return out
 
