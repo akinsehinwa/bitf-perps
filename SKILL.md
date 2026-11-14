@@ -160,6 +160,13 @@ market. With Q + CRT: eval pass ~93% (vs 95%), median ~100 days (vs ~149). At fu
 size: 76% pass, so keep it at half. The live detector was replayed against the
 backtest on 12 coins (60 days): same tickets.
 
+## Ticket sizing menu
+
+Every ticket ends with: what it was sized for (account, stage, risk %), the SL and TP as price % and as
+% of margin at 5x, and a table of the USDT margin to enter (and qty) at 0.5 / 1 / 1.5 / 1.75 / 2 / 2.5% risk
+for 50K and 100K accounts, capped at Bitfunded's per-coin max position (marked *). The user picks the
+cell for the account and risk they are trading.
+
 ## Ticket order: setup grade (all strategies)
 
 Every ticket carries a grade from its running room: the distance from the entry

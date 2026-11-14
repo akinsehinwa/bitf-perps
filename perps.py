@@ -1080,6 +1080,38 @@ def print_ticket(cfg, t, n=None):
     print("    loss at stop %s (%.2f%% of account, fees in); gain at target %s; fees %s; sized by %s" % (
         money(t["risk_usd"]), 100 * t["risk_usd"] / acct, money(t["reward_usd"]), money(t["fees_round_trip"]), t["sized_by"]))
     print("    close by %s if neither SL nor TP has hit; firm max hold %d days" % (t["time_stop"], t["firm_hold_limit_days"]))
+    print_size_menu(cfg, t)
+
+
+def print_size_menu(cfg, t):
+    """Reminder of what the ticket is sized for, SL/TP as price % and as % of margin at 5x, and the USDT margin /
+    qty to enter at other risk levels and account sizes (capped by Bitfunded's per-coin max position)."""
+    lev = cfg["firm"]["max_leverage"]; fee_rt = 2 * cfg["firm"]["fee_pct_per_side"] / 100
+    e, sl, tp = t["entry"], t["stop"], t["target"]
+    sl_pct = abs(e - sl) / e * 100; tp_pct = abs(tp - e) / e * 100
+    acct = cfg["account_size"]
+    print("    SIZED FOR: %s account, stage %s, risking %.2f%% (%s) -- set YOUR account and risk below if different" % (
+        money(acct).replace(".00", ""), t["stage"], 100 * t["risk_usd"] / acct, t["sized_by"]))
+    print("    SL is %.2f%% from entry = -%.1f%% of margin at %dx | TP is %.2f%% from entry = +%.1f%% of margin at %dx (before fees)" % (
+        sl_pct, sl_pct * lev, lev, tp_pct, tp_pct * lev, lev))
+    mp = load_markets().get(t["symbol"], {}).get("max_position")
+    lot = instrument(t["symbol"])["lot"]
+    sizes = sorted({acct, 50000, 100000})
+    levels = [0.5, 1.0, 1.5, 1.75, 2.0, 2.5]
+    print("    USDT MARGIN TO ENTER (isolated %dx) / qty  -- by risk %% per trade:" % lev)
+    print("      %-8s " % "account" + "".join("%-19s" % ("%.2f%%" % r) for r in levels))
+    for A in sizes:
+        cells = []
+        for r in levels:
+            n = (r / 100 * A) / (sl_pct / 100 + fee_rt)
+            capped = bool(mp) and n > mp
+            n = min(n, mp) if mp else n
+            q = math.floor(n / e / lot + 1e-9) * lot
+            cells.append("%-19s" % ("$%s / %s%s" % (format(int(q * e / lev), ","), ("%.4f" % q).rstrip("0").rstrip("."), "*" if capped else "")))
+        print("      %-8s " % (format(A // 1000, "d") + "K") + "".join(cells))
+    if mp:
+        print("      * = capped at Bitfunded's max position for %s ($%s notional = $%s margin at %dx); that cell risks less than its column" % (
+            t["symbol"], format(int(mp), ","), format(int(mp / lev), ","), lev))
 
 
 def crt_setup(cfg, ind, i, btc_trend, close_ms):
