@@ -144,3 +144,8 @@
   +6.08 dd 15.4R. Prior 2y all +0.31..+0.39R. Per coin only 6-15 trades in 12 months.
 - HOUSE STANDARD from now: decide on the last 12 months; require the prior 2 years not negative (stability gate);
   per-coin calls need pooled evidence (rules like corr/vol), not 6-15 trades.
+## 2026-11-14 User setups on all 72 coins (user_setups_all.py)
+- iFVG v2 big legs (G7): all 72 last 12m n189 15.8/mo 46% +0.12R; prior 2y n460 +0.07R; core 10 +0.12R / 0.00R.
+  Small but positive in both periods on a large sample (t ~1.9 pooled). WATCH: needs 1h attention (trigger is a 1h
+  close) - would need alerts to be ticketable.
+- BB20 limit (red, at close): all 72 +0.01R last 12m (+0.06R prior), core 10 -0.04R. REJECT.
