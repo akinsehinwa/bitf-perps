@@ -39,3 +39,10 @@
 - Limit-safe profiles (limit_safe.py; losing trades cost 1.05x / 1.25x planned risk). 5%/trade leaves no slippage room:
   funded blown 100% in ~37d ($3.6k). 3% single position: eval 76% pass, median 80d, E[days] 117; funded $7.3k/180d,
   78% blown. Safe 1.5%: eval 85%, median 163d; funded $6.8k/180d, 14% blown. Plan: pass fast (3% single), milk slow (1.5%).
+
+## 2026-11-14 User strategy: 4h parent leg -> 50/61.8% -> 1h inverted FVG -> limit at midline (ifvg_lab.py)
+- 8 user coins (SUI UNI BTC ETH SOL NEAR ADA LINK), 1h execution, pen 0.05, stop at the retracement extreme, 2R.
+- Base (zigzag 2 ATR, leg >= 3 ATR): 1149 trades, 32/mo, win 34%, -0.07R. 21 variants (targets, stops, BTC filter,
+  windows): all <= 0 except very large legs (>= 8 ATR). ifvg_big.py: k3 G8 +0.11R 5.4/mo but IS +0.01 / OS +0.45,
+  year 1 -0.15; neighbours (G6/G10, k2.5/k4) scatter around 0; other 4 coins -0.07R. Winners by coin (SUI ETH ADA)
+  look like selection. REJECT as a mechanical rule; big-leg pocket on WATCH (positive only in 2026).
