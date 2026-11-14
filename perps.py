@@ -66,7 +66,9 @@ DEFAULT_CONFIG = {
         "skip_days": ["Mon"],
         "weekend_stop": "Sat 04:00",
         "weekend_resume": "Sun 20:00",
-        "flat_for_weekend": True,
+        "flat_for_weekend": False,
+        "weekend_pause": False,
+        "checkins": [8, 12, 16, 20, 0],
         "max_trades_per_day": 3,
     },
     "strategy": {
@@ -198,6 +200,8 @@ def _wm(spec):
 
 
 def in_weekend(ms, sch):
+    if not sch.get("weekend_pause", True):
+        return False                           # 2026-11-14: user trades 7 days a week, same check-ins
     d = local_dt(ms, sch["tz_offset_hours"])
     wm = d.weekday() * 1440 + d.hour * 60 + d.minute
     a, b = _wm(sch["weekend_stop"]), _wm(sch["weekend_resume"])
@@ -1444,7 +1448,13 @@ def cmd_scan(cfg, a):
         sigs.append(t)
     save_json(path("offered.json"), offered)
     save_json(path("signals.json"), {"as_of": now_iso(), "bar_close_sgt": close_sgt, "scheduled": scheduled, "signals": sigs})
-    print("Next scans: " + ", ".join(local_dt(t, off).strftime("%a %H:%M") for t in next_scans(sch, 3)) + " SGT.")
+    ck = sch.get("checkins") or sch["scan_hours"]
+    t_ = close_ms + HOUR_MS; nxt = []
+    while len(nxt) < 3:
+        if local_dt(t_, off).hour in ck:
+            nxt.append(t_)
+        t_ += HOUR_MS
+    print("Next check-ins: " + ", ".join(local_dt(t, off).strftime("%a %H:%M") for t in nxt) + " SGT.")
     print("A setup is a rule match, not a prediction. Re-check the perp price before entering; signals expire at the next bar.")
     return 0 if found else 1
 

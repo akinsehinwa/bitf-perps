@@ -43,6 +43,14 @@ python3 "${CLAUDE_SKILL_DIR}/perps.py" data --all     # Binance perp 4h history 
 python3 "${CLAUDE_SKILL_DIR}/perps.py" backtest --all --detail
 ```
 
+## Check-ins (2026-11-14)
+
+The user checks in every day, weekends included, at 08:00, 12:00, 16:00, 20:00 and
+00:00 SGT (`schedule.checkins`); the weekend pause is OFF (`weekend_pause: false`,
+`flat_for_weekend: false`). Each strategy still only issues tickets at its own tested
+hours (Q 08/20/00, not Mondays; CRT and swing 08-20). Weekend trading was never in
+the backtests: treat weekend tickets as untested.
+
 ## The strategy: "4h quality breakout, with BTC"
 
 1. **What:** BTC ETH BNB XRP SOL ADA UNI LINK AVAX LTC (since 2026-11-14:
