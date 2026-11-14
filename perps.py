@@ -1092,8 +1092,7 @@ def print_size_menu(cfg, t):
     acct = cfg["account_size"]
     print("    SIZED FOR: %s account, stage %s, risking %.2f%% (%s) -- set YOUR account and risk below if different" % (
         money(acct).replace(".00", ""), t["stage"], 100 * t["risk_usd"] / acct, t["sized_by"]))
-    print("    SL is %.2f%% from entry = -%.1f%% of margin at %dx | TP is %.2f%% from entry = +%.1f%% of margin at %dx (before fees)" % (
-        sl_pct, sl_pct * lev, lev, tp_pct, tp_pct * lev, lev))
+    print("    SL %.2f%% from entry | TP %.2f%% from entry" % (sl_pct, tp_pct))
     mp = load_markets().get(t["symbol"], {}).get("max_position")
     lot = instrument(t["symbol"])["lot"]
     sizes = sorted({acct, 50000, 100000})
