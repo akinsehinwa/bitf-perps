@@ -86,7 +86,7 @@ def structure(b1, a1, minleg, look=120):
 
 
 def run(sym, look=120, minleg=2.0, G=3.0, W=48, V=12, inv=0.786, stop='ext', buf=0.5, tgt=1.5, liq=False, c4=False,
-        trend=True, hold=96, btc=False):
+        trend=True, hold=96, btc=False, CHK=None):
     b1 = load(sym, '1h'); b4 = load(sym, '4h')
     if len(b1) < 3000:
         return []
@@ -148,7 +148,16 @@ def run(sym, look=120, minleg=2.0, G=3.0, W=48, V=12, inv=0.786, stop='ext', buf
         if (lim - stp) * side <= 0 or abs(lim - stp) / lim < 0.002:
             continue
         n = e = None
-        for q in range(m + 1, min(len(b1), m + 1 + V)):
+        q0 = m + 1
+        if CHK:                                       # ticket placed at the next check-in hour (SGT)
+            dead = False
+            while q0 < len(b1) - 1 and ((b1[q0][0] // H + 8) % 24) not in CHK:
+                if (side == 1 and b1[q0][3] <= stp) or (side == -1 and b1[q0][2] >= stp):
+                    dead = True; break
+                q0 += 1
+            if dead or perps.in_weekend(b1[q0][0], SCH):
+                continue
+        for q in range(q0, min(len(b1), q0 + V)):
             x = b1[q]
             if (side == 1 and x[3] <= stp) or (side == -1 and x[2] >= stp):
                 break
