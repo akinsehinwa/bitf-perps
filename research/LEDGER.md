@@ -88,3 +88,21 @@
   Flat 1.5% everything: Q+CRT 76% / 136d; +B x0.5 88% / 119d / E 143d.
 - Funded 1%, 15d payouts, 1y (fixed: funded() now applies the B multiplier): Q+CRT $9.3k (worst10% $4.6k);
   +B x0.5 at 08/12/16/20 check-ins $10.6k (worst10% $7.5k, 0% blown); x0.75-1.0 adds blow-ups (29-30%).
+
+## 2026-11-14 REVIEW: BB20-engulf audit (bb_lab.py run(bias='ema4h', key='hz', pat=('engulf',), n_bb=20))
+- Code: no look-ahead found (BB/EMA50/ATR on closed setup bar i; 1h scan starts at T = open+4h; b1[n0-1] is the
+  setup candle's last closed 1h bar; pivots confirmed by i-1; ext/stop use bars up to the signal close; entry
+  b1[sig+1] open; stop-first, no target on fill bar, 0.04%/side, weekend skip+flat, busy, break). Independent
+  re-sim matches to 1e-14. No bug fixed.
+- Re-run: 9 coins n=301 8.4/mo 49% +0.127R PF 1.28 +1.06R/mo DD 11.2R, yrs +0.08/+0.18/+0.12, IS +0.13 OS +0.12,
+  t=1.99. 7 picked coins +0.18R (t 2.6, post-selection); 12 coins (+BNB XRP ZEC) +0.085R t=1.53, Y1 +0.01.
+  BTC carries IS (+0.66) but OS -0.03; ETH 0.00.
+- Nulls (9 coins): random side -0.05 +/- 0.06 (p 0.002); random hour same side -0.02 +/- 0.07 (p 0.011); entry jittered
+  -3..+4h around the engulf +0.18R (p 0.94) -> the engulf timing adds nothing; edge (if any) is the setup context.
+  ~50 variants: single-test p ~0.02 does not survive deflation.
+- House 4h clock (rule: hand tickets at 00/08/20 SGT): entries fire at all hours. Entering at the next scan after
+  the signal (same stop, skip if stop hit while waiting): n=257 +0.08R +0.59R/mo DD 18R, yrs +0.19/+0.09/-0.02,
+  IS +0.13 OS -0.02. Awake-hours (08-01 SGT) entries only: OS -0.02.
+- VERDICT: REJECT for the ticket book (executable version fails OS; t~2 after ~50 variants and coin selection).
+  Withdraw the book_bb.py add-on. Next (specific): 4h-clock entry at the scan right after the setup candle
+  (BB20 touch + 4h EMA50 bias + hz level, no 1h pattern), stop beyond setup extreme - tests the context directly.
