@@ -1098,8 +1098,8 @@ def print_size_menu(cfg, t):
     lot = instrument(t["symbol"])["lot"]
     sizes = sorted({acct, 50000, 100000})
     levels = [0.5, 1.0, 1.5, 1.75, 2.0, 2.5]
-    print("    USDT MARGIN TO ENTER (isolated %dx) / qty  -- by risk %% per trade:" % lev)
-    print("      %-8s " % "account" + "".join("%-19s" % ("%.2f%%" % r) for r in levels))
+    print("    USDT MARGIN TO ENTER (isolated %dx), by risk %% per trade:" % lev)
+    print("      %-8s " % "account" + "".join("%-11s" % ("%.2f%%" % r) for r in levels))
     for A in sizes:
         cells = []
         for r in levels:
@@ -1107,7 +1107,7 @@ def print_size_menu(cfg, t):
             capped = bool(mp) and n > mp
             n = min(n, mp) if mp else n
             q = math.floor(n / e / lot + 1e-9) * lot
-            cells.append("%-19s" % ("$%s / %s%s" % (format(int(q * e / lev), ","), ("%.4f" % q).rstrip("0").rstrip("."), "*" if capped else "")))
+            cells.append("%-11s" % ("$%s%s" % (format(int(q * e / lev), ","), "*" if capped else "")))
         print("      %-8s " % (format(A // 1000, "d") + "K") + "".join(cells))
     if mp:
         print("      * = capped at Bitfunded's max position for %s ($%s notional = $%s margin at %dx); that cell risks less than its column" % (
