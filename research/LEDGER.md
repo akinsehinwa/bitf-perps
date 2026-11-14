@@ -120,3 +120,8 @@
 - 3y: all tickets 7.4/mo 57% +0.38R +103R dd 9.9R; 2/day 54% +0.26R +55R; 2 open 53% +0.27R +58R; 3 open +0.31R +73R.
   Last 12m: all +0.52R +46R vs 2/day +0.32R +19R. Busy days (many coins firing) carry the best trades; capping by
   first-to-fill drops them. Days with 3+ fills: 25 of 160. REJECT slot caps below 3; keep all tickets with the guards.
+## 2026-11-14 Setup grading by running room to next structure (room.py)
+- Room = entry -> nearest untouched 4h (or daily) swing in the trade direction, in R. Q+CRT, 4h: blocked <1.5R
+  +0.41R (n48) | 1.5-3R +0.25R (86) | >=3R +0.53R (68; Q alone +0.86R n19) | clear air +0.39R (78, weak yrs 1-2).
+  Daily: <1.5R +0.38 | 1.5-3R +0.21 | >=3R +0.40 | clear air +0.45. Not monotonic: blocked trades still win 60%
+  (breakouts run through structure). Use as an ordering label only (A+ = >=3R room on 4h), never as a skip filter.
