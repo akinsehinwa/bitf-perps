@@ -170,3 +170,8 @@
 - Eval: 1.5% 96% pass med 96d E 113d | 1.75% 97% / 88d / 102d | 2.0% 94% / 76d / 93d. ADOPT 1.75%.
 - Funded 1y, 15d payouts: 1.0% mean $15.3k med $15.9k worst10% $9.8k blown 0% | 1.25% $16.8k / $19.4k / $5.9k / 23% |
   1.5% $15.1k / $13.7k / $1.8k / 57%. User chose 1.5% funded; data favours 1.0-1.25%.
+## 2026-11-14 Money per year across the full cycle (pipeline_money.py; eval 1.75%, one account at a time, 2y chains)
+- Net/yr after eval fees by funded risk: 0.75% $9.4k | 1.0% $12.5k | 1.25% $15.5k | 1.5% $17.4k (worst10% $12.3k) |
+  1.75% $15.7k | 2.0% $17.4k | 2.5% $18.2k | 3.0% $19.7k (worst10% $15.0k; 1.7 funded accounts/yr, 53% of time funded).
+- The user's framing holds: blowing faster and re-buying evals earns as much or more than nursing one account.
+  1.5-3% all ~$17-20k/yr (differences within noise; 119 overlapping starts on 3y of data). Keep 1.5% funded.
