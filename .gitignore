@@ -2,3 +2,4 @@ trader/
 __pycache__/
 *.pyc
 research/*.pkl
+state/cache/
