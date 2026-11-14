@@ -78,6 +78,9 @@ DEFAULT_CONFIG = {
         "aplus_breadth": 3,
         "crt": {"enabled": True, "hours": [8, 12, 16, 20], "body": 0.7, "min_range_atr": 1.0,
                 "min_rr": 1.0, "buf_atr": 0.1, "btc_daily_filter": True, "slippage_pct": 0.05, "hold_hours": 24},
+        "swing": {"enabled": True, "symbols": "all", "hours": [8, 12, 16, 20], "risk_mult": 0.5,
+                  "min_leg_atr": 7.0, "pivot_leg_atr": 2.0, "leg_lookback_h": 120, "window_h": 48,
+                  "valid_h": 12, "invalidate": 0.786, "stop_buf_atr": 0.5, "hold_hours": 96},
         "fill_pen_atr": 0.05,
         "donchian": 55,
         "ema_fast": 50,
@@ -485,7 +488,7 @@ def live_klines(sym, interval="4h", need=320):
     try:
         inst = "%s-USDT-SWAP" % sym
         rows, after = [], ""
-        for _ in range(4):
+        for _ in range(need // 100 + 1):
             url = "https://www.okx.com/api/v5/market/history-candles?instId=%s&bar=%s&limit=100%s" % (inst, okx_iv, after)
             data = json.loads(fetch(url, tries=1))["data"]
             if not data:
@@ -1087,6 +1090,120 @@ def crt_setup(cfg, ind, i, btc_trend, close_ms):
     return side, trig, stop, tgt
 
 
+def swing_structure(b1, a1, minleg, look):
+    """50%-retracement swing structure on 1h bars (research/ifvg2.py, unchanged logic). Yields
+    (m, side, O, E, Ei, trend) when a leg O->E (>= minleg x ATR4h) is 50% retraced at 1h bar m."""
+    piv = []
+    d, O, Oi, E, Ei = -1, b1[0][2], 0, b1[0][3], 0
+    ev = []
+    for m in range(1, len(b1)):
+        a = a1[m]
+        if a is None:
+            continue
+        hi, lo = b1[m][2], b1[m][3]
+        if m - Oi > look:
+            w = range(max(0, m - look), Ei + 1) if Ei >= m - look else None
+            if w:
+                if d == -1:
+                    Oi = max(w, key=lambda q: b1[q][2]); O = b1[Oi][2]
+                else:
+                    Oi = min(w, key=lambda q: b1[q][3]); O = b1[Oi][3]
+            else:
+                w = range(m - look, m + 1)
+                if d == -1:
+                    Oi = max(w, key=lambda q: b1[q][2]); O = b1[Oi][2]
+                    Ei = min(range(Oi, m + 1), key=lambda q: b1[q][3]); E = b1[Ei][3]
+                else:
+                    Oi = min(w, key=lambda q: b1[q][3]); O = b1[Oi][3]
+                    Ei = max(range(Oi, m + 1), key=lambda q: b1[q][2]); E = b1[Ei][2]
+        if d == -1:
+            if lo < E:
+                E, Ei = lo, m
+            elif hi >= E + 0.5 * (O - E) and O - E >= minleg * a:
+                hs = [p for p, k in piv if k == 1]; ls = [p for p, k in piv if k == -1]
+                if hs and hs[-1] == O:
+                    hs = hs[:-1]
+                ev.append((m, -1, O, E, Ei, bool(hs) and bool(ls) and O < hs[-1] and E < ls[-1]))
+                piv.append((E, -1)); d, O, Oi, E, Ei = 1, E, Ei, hi, m
+                continue
+            if hi > O:
+                if piv and piv[-1][1] == 1:
+                    piv.pop()
+                Oi = min(range(max(0, m - look), m + 1), key=lambda q: b1[q][3]); O = b1[Oi][3]
+                d, E, Ei = 1, hi, m
+        else:
+            if hi > E:
+                E, Ei = hi, m
+            elif lo <= E - 0.5 * (E - O) and E - O >= minleg * a:
+                hs = [p for p, k in piv if k == 1]; ls = [p for p, k in piv if k == -1]
+                if ls and ls[-1] == O:
+                    ls = ls[:-1]
+                ev.append((m, 1, O, E, Ei, bool(hs) and bool(ls) and O > ls[-1] and E > hs[-1]))
+                piv.append((E, 1)); d, O, Oi, E, Ei = -1, E, Ei, lo, m
+                continue
+            if lo < O:
+                if piv and piv[-1][1] == -1:
+                    piv.pop()
+                Oi = max(range(max(0, m - look), m + 1), key=lambda q: b1[q][2]); O = b1[Oi][2]
+                d, E, Ei = -1, lo, m
+    return ev
+
+
+def swing_setups(cfg, b1, b4, scan_ms, prev_ms):
+    """Swing tickets due at this check-in: a big leg (>= min_leg_atr x ATR4h, with structure trend) was 50%
+    retraced, then a 1h FVG formed in the retracement was inverted by a 1h close after the previous check-in
+    (prev_ms) and before this one; the stop has not traded since. Returns [(side, limit, stop, info)]."""
+    sw = cfg["strategy"]["swing"]
+    at4 = atr([x[2] for x in b4], [x[3] for x in b4], [x[4] for x in b4], 14)
+    t4 = {x[0]: k for k, x in enumerate(b4)}
+    a1 = []
+    for x in b1:
+        k = t4.get((x[0] // (4 * HOUR_MS)) * 4 * HOUR_MS - 4 * HOUR_MS)
+        a1.append(at4[k] if k is not None else None)
+    out = []
+    for (m0, side, O, E, Ei, tr) in swing_structure(b1, a1, sw["pivot_leg_atr"], sw["leg_lookback_h"]):
+        a = a1[m0]
+        if not tr or abs(O - E) < sw["min_leg_atr"] * a or b1[m0][0] < scan_ms - (sw["window_h"] + 24) * HOUR_MS:
+            continue
+        size = abs(O - E); inv_px = E - side * sw["invalidate"] * size
+        fv = []
+        for j in range(Ei + 2, m0 + 1):
+            if side == -1 and b1[j][3] > b1[j - 2][2]:
+                fv.append((b1[j - 2][2], b1[j][3]))
+            if side == 1 and b1[j][2] < b1[j - 2][3]:
+                fv.append((b1[j][2], b1[j - 2][3]))
+        rx = max(x[2] for x in b1[Ei:m0 + 1]) if side == -1 else min(x[3] for x in b1[Ei:m0 + 1])
+        sig = None
+        for m in range(m0, min(len(b1), m0 + sw["window_h"])):
+            x = b1[m]
+            if m > m0:
+                if side == -1 and b1[m][3] > b1[m - 2][2]:
+                    fv.append((b1[m - 2][2], b1[m][3]))
+                if side == 1 and b1[m][2] < b1[m - 2][3]:
+                    fv.append((b1[m][2], b1[m - 2][3]))
+            rx = max(rx, x[2]) if side == -1 else min(rx, x[3])
+            if (side == -1 and x[4] > inv_px) or (side == 1 and x[4] < inv_px):
+                break
+            hit = [g for g in fv if (side == -1 and x[4] < g[0]) or (side == 1 and x[4] > g[1])]
+            if hit:
+                g = hit[-1]; sig = (m, (g[0] + g[1]) / 2); break
+            fv = [g for g in fv if g not in hit]
+        if sig is None:
+            continue
+        m, lim = sig
+        if not (prev_ms < b1[m][0] + HOUR_MS <= scan_ms):
+            continue                                   # inverted before the last check-in (already offered) or later
+        stp = rx - side * sw["stop_buf_atr"] * a
+        if (lim - stp) * side <= 0 or abs(lim - stp) / lim < 0.002:
+            continue
+        if any((side == 1 and y[3] <= stp) or (side == -1 and y[2] >= stp) for y in b1[m + 1:]):
+            continue                                   # stop already traded: setup dead
+        out.append((("long" if side == 1 else "short"), lim, stp,
+                    {"leg": "%s -> %s (%.1f x ATR)" % (fmt_px(O), fmt_px(E), size / a), "origin_t": b1[m0][0],
+                     "zone": "50%% %s / 61.8%% %s / void past 78.6%% %s" % (fmt_px(E - side * 0.5 * size), fmt_px(E - side * 0.618 * size), fmt_px(inv_px))}))
+    return out
+
+
 def room_r(ind, side, entry, stop, frac=3, look=540):
     """Running room: entry -> nearest untouched 4h swing in the trade direction (fractal `frac`, confirmed, last
     `look` bars, not traded through since), in R. None = clear air."""
@@ -1267,13 +1384,53 @@ def cmd_scan(cfg, a):
                 "SELL" if side == "short" else "BUY", fmt_px(trig), expiry)
             t["room"] = room_r(inds[s], side, t["entry"], t["stop"]) if s in inds else None
             cands.append([None, 1, t])
+    sw = st.get("swing", {})
+    if sw.get("enabled") and btc:
+        if local_dt(close_ms, off).hour not in sw["hours"]:
+            print("SWING: this close is not a swing check-in (%s SGT)." % ", ".join("%02d:00" % h for h in sw["hours"]))
+        else:
+            prev = close_ms - HOUR_MS                  # the previous check-in hour (weekend inversions lapse, as tested)
+            while local_dt(prev, off).hour not in sw["hours"]:
+                prev -= HOUR_MS
+            uni = [k for k, v in load_markets().items() if v.get("type") == "crypto" and v.get("binance")] \
+                if sw.get("symbols") == "all" else sw["symbols"]
+            n_sw = 0
+
+            def _get(sym):
+                try:
+                    return sym, live_klines(sym, "1h", need=800)[0], live_klines(sym, "4h", need=240)[0]
+                except Exception:
+                    return sym, [], []
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(8) as ex:
+                got = list(ex.map(_get, uni))
+            for s, b1, b4 in got:
+                if len(b1) < 700 or len(b4) < 150 or is_stale(b1, "1h") or is_stale(b4, "4h"):
+                    continue
+                for side, lim, stp, info in swing_setups(cfg, b1, b4, close_ms, prev):
+                    if any(c[2]["symbol"] == s for c in cands):
+                        print("SWING %s %s skipped: %s already has a ticket this scan." % (side, s, s))
+                        continue
+                    t, err = ticket(cfg, j, s, side, lim, stp, None, "swing", sw["risk_mult"],
+                                    "swing x%.2f" % sw["risk_mult"], 0.0, sw.get("hold_hours"))
+                    if err:
+                        print("SWING %s %s: %s" % (side, s, err))
+                        continue
+                    expiry = local_dt(close_ms + sw["valid_h"] * HOUR_MS, off).strftime("%a %d %b %H:%M SGT")
+                    t["order"] = "LIMIT at %s (1h FVG midline), cancel if not filled by %s" % (fmt_px(t["entry"]), expiry)
+                    t["setup"] = "swing: leg %s, %s" % (info["leg"], info["zone"])
+                    t["room"] = room_r({"h": [x[2] for x in b4], "l": [x[3] for x in b4]}, side, t["entry"], t["stop"])
+                    cands.append([None, 2, t]); n_sw += 1
+            if not n_sw:
+                print("SWING: no big-leg 50%% retracement with a 1h FVG inversion since %s SGT (%d coins checked)." % (
+                    local_dt(prev, off).strftime("%a %H:%M"), len(uni)))
     for c in cands:
         g, rank = grade_of(c[2]["room"])
         c[0] = rank
         c[2]["grade"] = g
     cands.sort(key=lambda c: (c[0], c[1]))
     if len(cands) > 1:
-        print("Tickets ordered best-first: grade (A+ = 3R+ of room to the next 4h swing), then Q before CRT. Take them all if slots allow.")
+        print("Tickets ordered best-first: grade (A+ = 3R+ of room to the next 4h swing), then Q, CRT, swing. Take them all if slots allow.")
     for c in cands:
         t = c[2]
         if repeat(t):

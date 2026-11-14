@@ -149,3 +149,9 @@
   Small but positive in both periods on a large sample (t ~1.9 pooled). WATCH: needs 1h attention (trigger is a 1h
   close) - would need alerts to be ticketable.
 - BB20 limit (red, at close): all 72 +0.01R last 12m (+0.06R prior), core 10 -0.04R. REJECT.
+## 2026-11-14 Swing ticket (check-in) ADOPTED into scan at half risk
+- swing_checkin.py: limit placed at the next 08/12/16/20 check-in after the 1h inversion, valid 12h: all 72 last 12m
+  n173 49% +0.16R, prior 2y +0.16R (instant entry +0.12 / +0.07R). Core 10 ~0R.
+- book_swing.py (new core 10 Q+CRT + swing all 72): x0.5 93% pass, median 100d, E 120d (vs 95% / 149d / 155d);
+  x1.0 76% / 66d. Live detector (perps.swing_setups) replayed vs backtest, 12 coins x 60 days: identical tickets
+  after matching history (800 1h bars) and weekend handling.

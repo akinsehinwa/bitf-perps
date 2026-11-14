@@ -123,13 +123,39 @@ probation: cut it (`"crt": {"enabled": false}`) if `tune` shows it below 0R
 after 20 trades. Rejected: entering at C3's open, a 15m CRT confirmation,
 1h/2h CRT, sweeps into prior daily/4h levels.
 
-## Ticket order: setup grade (both strategies)
+## Strategy 3: "swing" (big-leg 50% retracement + 1h inverted FVG), all coins
+
+Runs in the same `scan` at the 08:00, 12:00, 16:00 and 20:00 SGT check-ins, on ALL
+Bitfunded crypto perps (72), not just the core 10.
+
+1. **Swings:** on 1h bars, a swing low (high) only counts once price retraces at
+   least 50% of the leg into it; smaller bounces just extend the leg. Legs are
+   read over the last 5 days.
+2. **Parent leg:** at least 7 x ATR(14, 4h), starting at a lower high and ending
+   at a lower low for a short (higher low -> higher high for a long).
+3. **Arm:** the 50% retracement of that leg. Void if a 1h candle closes beyond
+   the 78.6% retracement or after 48 hours.
+4. **Trigger:** a 1h fair value gap formed during the retracement is inverted (a
+   1h close through it) between the previous check-in and this one.
+5. **Ticket:** LIMIT at the gap's midline, valid 12 hours. Stop beyond the
+   retracement extreme + 0.5 x ATR(4h). Target 1.5R after fees. Risk 0.5 x the
+   stage risk (0.75% in the eval, 0.5% funded); no volatility tilt. Time stop 96h.
+   Skipped if the stop already traded, or the coin already has a Q/CRT ticket.
+
+Research (research/ifvg2.py, swing_checkin.py, book_swing.py), all 72 coins, entry
+at the next check-in: last 12 months 173 trades (14/month), 49% win, +0.16R; the
+2 years before +0.16R. Core 10 alone ~0R lately, so the edge is spread across the
+market. With Q + CRT: eval pass ~93% (vs 95%), median ~100 days (vs ~149). At full
+size: 76% pass, so keep it at half. The live detector was replayed against the
+backtest on 12 coins (60 days): same tickets.
+
+## Ticket order: setup grade (all strategies)
 
 Every ticket carries a grade from its running room: the distance from the entry
 to the nearest untouched 4h swing in the trade direction, in R.
 **A+** = 3R or more of room (backtest +0.53R/trade); **A** = clear air or
 blocked under 1.5R (+0.39 / +0.41R: breakouts often run straight through);
-**B** = 1.5-3R (+0.25R). Tickets print best-first (grade, then Q before CRT).
+**B** = 1.5-3R (+0.25R). Tickets print best-first (grade, then Q, CRT, swing).
 The grade orders tickets; it never skips one. Take every ticket the slots allow:
 capping to the first 1-2 a day halved profit (the busiest days are the best).
 
