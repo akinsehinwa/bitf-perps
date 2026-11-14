@@ -125,3 +125,11 @@
   +0.41R (n48) | 1.5-3R +0.25R (86) | >=3R +0.53R (68; Q alone +0.86R n19) | clear air +0.39R (78, weak yrs 1-2).
   Daily: <1.5R +0.38 | 1.5-3R +0.21 | >=3R +0.40 | clear air +0.45. Not monotonic: blocked trades still win 60%
   (breakouts run through structure). Use as an ordering label only (A+ = >=3R room on 4h), never as a skip filter.
+
+## 2026-11-14 All 72 Bitfunded crypto perps on Q and CRT (all_coins.py, similarity.py)
+- Q: all 72 +0.20R 26.6/mo (core 10 +0.43R; other 62 +0.15R, yrs -0.06/+0.20/+0.27). CRT: other 62 +0.05R, OS -0.15R.
+- Q avg R per coin vs similarity (coins >= 8 trades): rank-corr with corr-to-BTC +0.47, volatility -0.35, beta 0.0,
+  trend efficiency 0.0, breakout follow-through +0.22 -> coins that track BTC with moderate vol work best for Q.
+- Last 12m, flat 1.5%: core uncapped 8/mo +0.53R +4.2R/mo; core capped (3 open, 3/day) +2.2R/mo; all-72 uncapped
+  50/mo +0.19R +9.7R/mo but worst-5% month -26R (fails any eval); all-72 capped 22.5/mo +0.11R +2.6R/mo, worst 5% -7.7R.
+- Best non-core by Q+CRT R: AVAX LTC ARB WIF JASMY SEI ENS (n 8-20 each, selection risk). Core laggards: HYPE (-3.9R), ZEC.
