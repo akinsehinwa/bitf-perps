@@ -61,3 +61,11 @@
 - Daily regime split (ifvg2_regime.py; Kaufman ER on 10/20/30 completed days + daily EMA20/50). Base: healthy trend
   -0.08..-0.14R, knife -0.07..-0.16R, chop -0.08..-0.16R, counter-trend -0.23R (20/30d). Daily EMA agrees -0.06R vs
   disagrees -0.19R. Legs>=6 ATR: no bucket consistent across windows. Regime filter does not make v2 positive. REJECT.
+
+## 2026-11-14 User strategy: Bollinger band extreme + key level + 1h reversal (bb_lab.py, bb_v2..v4.py)
+- BB13, daily EMA bias, unswept swing level, any reversal: 1531 trades, -0.09R; 19 variants all negative.
+- User's NEAR chart: bias must be 4h (daily EMA lags), levels are horizontal S/R. 4h EMA50 bias + S/R (>=3 swing
+  touches in 90d): BB13 -0.06R. BB length is the driver: 17 0.00 / 20 +0.05 / 21 +0.05 / 25 +0.11 / 30 -0.06R.
+- 1h ENGULFING only is the edge: BB17 +0.06, BB20 +0.13 (8.4/mo, yrs +0.08/+0.18/+0.12, IS=OS), BB23 +0.13, BB25 +0.13,
+  BB20 x2.5 +0.23 (3.9/mo), BB20 no level +0.11 (12.8/mo). Pin bars ~0. 6/9 coins positive (BTC +0.43, NEAR +0.27);
+  LINK, HYPE negative; BNB/XRP/ZEC -0.06. ~50 variants tried. PROBATION: next = reviewer audit + book sim with Q/CRT.
