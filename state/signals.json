@@ -1,30 +1,6 @@
 {
-  "as_of": "2026-11-15T08:06:32Z",
-  "bar_close_sgt": "Sun 2026-11-15 16:00",
+  "as_of": "2026-11-15T12:07:07Z",
+  "bar_close_sgt": "Sun 2026-11-15 20:00",
   "scheduled": false,
-  "signals": [
-    {
-      "symbol": "XRP",
-      "side": "short",
-      "setup": "crt4h | grade A: clear air (no untouched 4h swing in the way)",
-      "entry": 0.9425,
-      "stop": 0.982,
-      "target": 0.8987,
-      "qty": 7960.0,
-      "notional": 7502.3,
-      "margin": 1500.46,
-      "leverage": 5,
-      "risk_usd": 327.9241399999999,
-      "reward_usd": 342.6461599999996,
-      "fees_round_trip": 6.0018400000000005,
-      "rr": 1.1088607594936701,
-      "sized_by": "base 1.75% (stage 1) x mult 1.00 x 0.38 (BTC 7-day volatility contracting, CRT x0.75)",
-      "stage": "1",
-      "firm_hold_limit_days": 10,
-      "time_stop": "Mon 16 Nov 16:06 SGT (24h time stop)",
-      "order": "SELL STOP at 0.94250 (stop-limit), cancel if not triggered by Sun 15 Nov 20:00 SGT (candle 3 close)",
-      "room": null,
-      "grade": "A"
-    }
-  ]
+  "signals": []
 }
