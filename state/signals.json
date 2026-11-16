@@ -1,6 +1,30 @@
 {
-  "as_of": "2026-11-15T16:06:21Z",
-  "bar_close_sgt": "Mon 2026-11-16 00:00",
+  "as_of": "2026-11-16T00:07:07Z",
+  "bar_close_sgt": "Mon 2026-11-16 08:00",
   "scheduled": false,
-  "signals": []
+  "signals": [
+    {
+      "symbol": "ASTER",
+      "side": "short",
+      "setup": "swing: leg 0.67190 -> 0.47790 (8.2 x ATR), 50% 0.57490 / 61.8% 0.59779 / void past 78.6% 0.63038 | grade A: 0.3R to the next untouched 4h swing",
+      "entry": 0.541,
+      "stop": 0.7241,
+      "target": 0.2652,
+      "qty": 2383.0,
+      "notional": 1289.203,
+      "margin": 257.8406,
+      "leverage": 5,
+      "risk_usd": 437.35866239999984,
+      "reward_usd": 656.2000376,
+      "fees_round_trip": 1.0313624,
+      "rr": 1.5062807209175322,
+      "sized_by": "base 1.75% (stage 1) x mult 1.00 x 0.50 (swing x0.50)",
+      "stage": "1",
+      "firm_hold_limit_days": 7,
+      "time_stop": "Fri 20 Nov 08:07 SGT (96h time stop)",
+      "order": "LIMIT at 0.54100 (1h FVG midline), cancel if not filled by Mon 16 Nov 20:00 SGT",
+      "room": 0.3446204259967235,
+      "grade": "A"
+    }
+  ]
 }
