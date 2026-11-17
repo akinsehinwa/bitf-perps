@@ -1350,6 +1350,7 @@ def cmd_scan(cfg, a):
             t, err = ticket(cfg, j, s, sig["side"], entry, stop, None, sig["setup"], vm, vwhy)
             if t:
                 t["order"] = ("LIMIT at %s, cancel if not filled by %s" % (fmt_px(entry), expiry)) if expiry else "MARKET"
+                t.update(kind="limit", expires_ms=close_ms + st["limit_valid_hours"] * HOUR_MS, hold_h=hold_hours(cfg), placed_ms=close_ms)
                 t["room"] = room_r(ind, t["side"], t["entry"], t["stop"])
             found.append((s, sig, t, err, line))
         watch.append(line)
@@ -1444,6 +1445,7 @@ def cmd_scan(cfg, a):
             expiry = local_dt(close_ms + IV_MS[st["interval"]], off).strftime("%a %d %b %H:%M SGT")
             t["order"] = "%s STOP at %s (stop-limit), cancel if not triggered by %s (candle 3 close)" % (
                 "SELL" if side == "short" else "BUY", fmt_px(trig), expiry)
+            t.update(kind="stop", expires_ms=close_ms + IV_MS[st["interval"]], hold_h=crt_cfg.get("hold_hours", 24), placed_ms=close_ms)
             t["room"] = room_r(inds[s], side, t["entry"], t["stop"]) if s in inds else None
             cands.append([None, 1, t])
     sw = st.get("swing", {})
@@ -1482,6 +1484,7 @@ def cmd_scan(cfg, a):
                         continue
                     expiry = local_dt(close_ms + sw["valid_h"] * HOUR_MS, off).strftime("%a %d %b %H:%M SGT")
                     t["order"] = "LIMIT at %s (1h FVG midline), cancel if not filled by %s" % (fmt_px(t["entry"]), expiry)
+                    t.update(kind="limit", expires_ms=close_ms + sw["valid_h"] * HOUR_MS, hold_h=sw.get("hold_hours", 96), placed_ms=close_ms)
                     t["setup"] = "swing: leg %s, %s" % (info["leg"], info["zone"])
                     t["room"] = room_r({"h": [x[2] for x in b4], "l": [x[3] for x in b4]}, side, t["entry"], t["stop"])
                     cands.append([None, 2, t]); n_sw += 1

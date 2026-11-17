@@ -1,0 +1,7 @@
+{
+ "name": "30-day forward test",
+ "start": "2026-11-14T12:00:00Z",
+ "end": "2026-12-14T12:00:00Z",
+ "account": "50K stage 1 paper",
+ "notes": "every valid ticket taken automatically"
+}

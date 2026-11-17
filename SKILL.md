@@ -273,3 +273,10 @@ history, not a promise.
 - Never print a profit promise. Backtest numbers are history, not odds.
 - Never suggest raising risk above `max_risk_pct`, removing the stop, or
   holding past the time stop to "get back" a loss.
+
+## Paper forward test (2026-11-14 -> 2026-12-14)
+
+`PERPS_DIR=state python3 paper.py checkin` runs at every check-in: pending paper orders fill or expire on real
+1h candles, open paper trades close at stop / target / time stop, the scan runs, and every new ticket becomes a
+paper order. Fills are written to the bot's journal so guards and stage tracking apply. Book: state/paper.json,
+window: state/experiment.json. `paper.py status` prints the book.
