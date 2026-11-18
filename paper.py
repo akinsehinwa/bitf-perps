@@ -121,8 +121,9 @@ def add_tickets(book):
     for t in sigs:
         if "kind" not in t or (t["symbol"], t["placed_ms"]) in have:
             continue
-        book["pending"].append({k: t[k] for k in ("symbol", "side", "setup", "entry", "stop", "target", "qty", "kind",
-                                                  "expires_ms", "hold_h", "placed_ms")})
+        o = {k: t[k] for k in ("symbol", "side", "setup", "entry", "stop", "target", "qty", "kind", "expires_ms", "hold_h", "placed_ms")}
+        o["setup"] = o["setup"].split(":")[0].split()[0]
+        book["pending"].append(o)
         print("  PAPER ORDER placed: %s %s %s %s at %s, stop %s, target %s, expires %s" % (
             t["setup"].split()[0].split("|")[0], t["side"], t["symbol"], t["kind"].upper(), perps.fmt_px(t["entry"]),
             perps.fmt_px(t["stop"]), perps.fmt_px(t["target"]), sgt(t["expires_ms"])))
@@ -161,10 +162,50 @@ def summary(cfg, book, j):
         print("30-DAY EXPERIMENT: day %.0f of 30 (ends %s)%s" % (30 - left, sgt(end), "  *** EXPERIMENT ENDED ***" if left <= 0 else ""))
 
 
+def replay(cfg, book, at_sgt):
+    """Run a missed check-in as of `at_sgt` ("YYYY-MM-DD HH:MM", SGT): live data is cut to candles closed by then and
+    the clock is set 5 minutes after the close; any tickets become paper orders placed at that time."""
+    T = int(dt.datetime.strptime(at_sgt, "%Y-%m-%d %H:%M").replace(tzinfo=dt.timezone(dt.timedelta(hours=8))).timestamp() * 1000)
+    real_kl, real_now = perps.live_klines, perps.now_utc
+    vol = perps.load_json(perps.path("vol_state.json"), None)
+
+    def kl(sym, interval="4h", need=320):
+        iv = perps.IV_MS[interval]
+        extra = int((now_ms() - T) / iv) + 2
+        b, src = real_kl(sym, interval, need=need + extra)
+        return [x for x in b if x[0] + iv <= T], src
+    perps.live_klines = kl
+    perps.now_utc = lambda: dt.datetime.fromtimestamp((T + 5 * 60_000) / 1000, dt.timezone.utc)
+    try:
+        print("REPLAY of the missed check-in at %s:" % sgt(T))
+        perps.cmd_scan(cfg, argparse.Namespace(symbols=None))
+        add_tickets(book)
+    finally:
+        perps.live_klines, perps.now_utc = real_kl, real_now
+        if vol is not None:
+            perps.save_json(perps.path("vol_state.json"), vol)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["checkin", "update", "status"])
+    ap.add_argument("cmd", choices=["checkin", "update", "status", "replay"])
+    ap.add_argument("--at", action="append", help="replay: missed check-in time(s), SGT 'YYYY-MM-DD HH:MM'")
     a = ap.parse_args()
+    if a.cmd == "replay":
+        cfg = perps.load_config(); book = load_book()
+        for at in a.at or []:
+            replay(cfg, book, at)
+            print()
+        perps.save_json(perps.path("paper.json"), book)
+        j = perps.load_journal()
+        print("Paper book update after replay:")
+        n0 = len(book["events"])
+        update(cfg, book, j)
+        if len(book["events"]) == n0:
+            print("  (no fills, cancels or closes)")
+        perps.save_journal(j); perps.save_json(perps.path("paper.json"), book)
+        print(); summary(cfg, book, perps.load_journal())
+        return
     cfg = perps.load_config()
     book = load_book(); j = perps.load_journal()
     if a.cmd in ("checkin", "update"):
