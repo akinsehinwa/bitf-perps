@@ -207,7 +207,25 @@ def main():
         print(); summary(cfg, book, perps.load_journal())
         return
     cfg = perps.load_config()
-    book = load_book(); j = perps.load_journal()
+    book = load_book()
+    if a.cmd == "checkin":
+        # automatic catch-up: replay every check-in hour missed since the last scanned one (max 7 days back)
+        ck = cfg["schedule"].get("checkins") or cfg["schedule"]["scan_hours"]
+        cur = (now_ms() // (4 * H)) * 4 * H                      # the 4h close this check-in scans
+        last = book.get("last_checkin_ms") or cur
+        t = max(last, cur - 7 * 86_400_000) + H
+        missed = []
+        while t < cur:
+            if t % (4 * H) == 0 and perps.local_dt(t, 8).hour in ck:
+                missed.append(t)
+            t += H
+        if missed:
+            print("CATCH-UP: %d missed check-in(s) replayed: %s" % (len(missed), ", ".join(sgt(m) for m in missed)))
+            for m in missed:
+                replay(cfg, book, perps.local_dt(m, 8).strftime("%Y-%m-%d %H:%M"))
+                print()
+        book["last_checkin_ms"] = cur
+    j = perps.load_journal()
     if a.cmd in ("checkin", "update"):
         print("Paper book update:")
         n0 = len(book["events"])

@@ -280,3 +280,7 @@ history, not a promise.
 1h candles, open paper trades close at stop / target / time stop, the scan runs, and every new ticket becomes a
 paper order. Fills are written to the bot's journal so guards and stage tracking apply. Book: state/paper.json,
 window: state/experiment.json. `paper.py status` prints the book.
+Missed check-ins (session restarts) are replayed automatically at the next `checkin`: every check-in hour
+since `last_checkin_ms` (max 7 days) is re-scanned on the data as it stood then, its tickets become paper
+orders placed at that time, and fills are worked out from real prices since. `paper.py replay --at
+"YYYY-MM-DD HH:MM"` (SGT) does the same by hand. Already-offered tickets are never duplicated.
