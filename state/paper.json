@@ -1,5 +1,19 @@
 {
-  "pending": [],
+  "pending": [
+    {
+      "symbol": "TAO",
+      "side": "short",
+      "setup": "swing: leg 219.28 -> 177.41 (7.3 x ATR), 50% 198.34 / 61.8% 203.29 / void past 78.6% 210.32 | grade B: 1.6R to the next untouched 4h swing",
+      "entry": 196.35,
+      "stop": 201.69,
+      "target": 187.95,
+      "qty": 79.58,
+      "kind": "limit",
+      "expires_ms": 1795017600000,
+      "hold_h": 96,
+      "placed_ms": 1794974400000
+    }
+  ],
   "events": [
     {
       "t": "2026-11-15T12:00:00Z",
@@ -12,5 +26,5 @@
       "text": "FILLED #1 swing short ASTER at 0.54100 (stop 0.72410, target 0.26520, risk $437)"
     }
   ],
-  "last_run": "2026-11-17T12:07:52Z"
+  "last_run": "2026-11-18T06:49:44Z"
 }
