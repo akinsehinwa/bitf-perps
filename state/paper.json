@@ -1,19 +1,5 @@
 {
-  "pending": [
-    {
-      "symbol": "SOL",
-      "side": "short",
-      "setup": "swing",
-      "entry": 74.51,
-      "stop": 76.77,
-      "target": 70.98,
-      "qty": 188.60000000000002,
-      "kind": "limit",
-      "expires_ms": 1795089600000,
-      "hold_h": 96,
-      "placed_ms": 1795046400000
-    }
-  ],
+  "pending": [],
   "events": [
     {
       "t": "2026-11-15T12:00:00Z",
@@ -39,8 +25,13 @@
       "t": "2026-11-18T23:00:00Z",
       "sgt": "Thu 19 Nov 07:00 SGT",
       "text": "CLOSED #3 swing short TAO at 187.95 (target): +656 USD, +1.50R"
+    },
+    {
+      "t": "2026-11-19T04:00:00Z",
+      "sgt": "Thu 19 Nov 12:00 SGT",
+      "text": "FILLED #4 swing short SOL at 74.51 (stop 76.77, target 70.98, risk $437)"
     }
   ],
-  "last_run": "2026-11-19T04:17:05Z",
-  "last_checkin_ms": 1795060800000
+  "last_run": "2026-11-19T08:07:49Z",
+  "last_checkin_ms": 1795075200000
 }

@@ -58,6 +58,23 @@
       "closed_at": "2026-11-18T23:00:00Z",
       "r": 1.5001200637429328,
       "exit_why": "target"
+    },
+    {
+      "symbol": "SOL",
+      "side": "short",
+      "setup": "swing",
+      "entry": 74.51,
+      "stop": 76.77,
+      "target": 70.98,
+      "qty": 188.60000000000002,
+      "paper": true,
+      "hold_h": 96,
+      "fill_ms": 1795060800000,
+      "notional": 14052.586000000003,
+      "risk_usd": 437.47806879999837,
+      "id": 4,
+      "opened_at": "2026-11-19T04:00:00Z",
+      "stage": "1"
     }
   ],
   "history": []
