@@ -284,3 +284,5 @@ Missed check-ins (session restarts) are replayed automatically at the next `chec
 since `last_checkin_ms` (max 7 days) is re-scanned on the data as it stood then, its tickets become paper
 orders placed at that time, and fills are worked out from real prices since. `paper.py replay --at
 "YYYY-MM-DD HH:MM"` (SGT) does the same by hand. Already-offered tickets are never duplicated.
+`paper.py weekly` prints a breakdown by strategy (tickets, filled, closed, wins, R, realized, open P&L) for the
+last 7 days and since the experiment started; it runs automatically every Saturday 20:20 SGT.

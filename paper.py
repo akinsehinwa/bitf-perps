@@ -186,9 +186,57 @@ def replay(cfg, book, at_sgt):
             perps.save_json(perps.path("vol_state.json"), vol)
 
 
+def strat_of(setup):
+    s = (setup or "").split(":")[0].split("|")[0].split()[0].lower()
+    return {"crt4h": "CRT", "swing": "Swing"}.get(s, "Q" if s.startswith("breakout") or s == "q" else s.capitalize() or "?")
+
+
+def weekly(cfg, book, j, days=7):
+    """Breakdown by strategy for the last `days` days and since the experiment started."""
+    end = now_ms()
+    exp = perps.load_json(perps.path("experiment.json"), {})
+    start = int(perps.parse_iso(exp["start"]).timestamp() * 1000) if exp else end - 30 * 86_400_000
+    offered = perps.load_json(perps.path("offered.json"), {})
+    tick = [(strat_of(k.split("|")[1]), int(perps.parse_iso(v).timestamp() * 1000)) for k, v in offered.items()]
+    marks = {}
+
+    def mark(sym):
+        if sym not in marks:
+            try:
+                marks[sym] = perps.live_klines(sym, "1h", need=5)[0][-1][4]
+            except Exception:
+                marks[sym] = None
+        return marks[sym]
+    fee = cfg["firm"]["fee_pct_per_side"] / 100
+
+    def table(t0, label):
+        print("\n%s (%s -> %s)" % (label, sgt(t0), sgt(end)))
+        print("  %-6s %7s %6s %6s %5s %8s %9s %9s %10s" % ("", "tickets", "filled", "closed", "wins", "R", "realized", "open P&L", "total"))
+        tot = [0, 0, 0, 0, 0.0, 0.0, 0.0]
+        for st in ("Q", "CRT", "Swing"):
+            nt = sum(1 for s_, t in tick if s_ == st and t0 <= t <= end)
+            tr = [t for t in j["trades"] if strat_of(t.get("setup")) == st]
+            fl = [t for t in tr if t0 <= int(perps.parse_iso(t["opened_at"]).timestamp() * 1000) <= end]
+            cl = [t for t in tr if t.get("closed_at") and t0 <= int(perps.parse_iso(t["closed_at"]).timestamp() * 1000) <= end]
+            wins = sum(t["pnl"] > 0 for t in cl); R = sum(t["r"] for t in cl); usd = sum(t["pnl"] for t in cl)
+            op = 0.0
+            for t in tr:
+                if not t.get("closed_at") and mark(t["symbol"]):
+                    s = 1 if t["side"] == "long" else -1
+                    m = mark(t["symbol"])
+                    op += s * (m - t["entry"]) * t["qty"] - fee * t["qty"] * (t["entry"] + m)
+            print("  %-6s %7d %6d %6d %5d %+8.2f %+9.0f %+9.0f %+10.0f" % (st, nt, len(fl), len(cl), wins, R, usd, op, usd + op))
+            for i, v in enumerate((nt, len(fl), len(cl), wins, R, usd, op)):
+                tot[i] += v
+        print("  %-6s %7d %6d %6d %5d %+8.2f %+9.0f %+9.0f %+10.0f" % ("ALL", tot[0], tot[1], tot[2], tot[3], tot[4], tot[5], tot[6], tot[5] + tot[6]))
+    table(max(start, end - days * 86_400_000), "THIS WEEK by strategy")
+    table(start, "SINCE THE EXPERIMENT STARTED by strategy")
+    print("  (open P&L = open positions marked at the last hourly close; backtest guide: Q ~1.4, CRT ~0.5, swing ~3.3 trades a week)")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["checkin", "update", "status", "replay"])
+    ap.add_argument("cmd", choices=["checkin", "update", "status", "replay", "weekly"])
     ap.add_argument("--at", action="append", help="replay: missed check-in time(s), SGT 'YYYY-MM-DD HH:MM'")
     a = ap.parse_args()
     if a.cmd == "replay":
@@ -208,6 +256,12 @@ def main():
         return
     cfg = perps.load_config()
     book = load_book()
+    if a.cmd == "weekly":
+        j = perps.load_journal()
+        update(cfg, book, j); perps.save_journal(j); perps.save_json(perps.path("paper.json"), book)
+        summary(cfg, book, perps.load_journal())
+        weekly(cfg, book, perps.load_journal())
+        return
     if a.cmd == "checkin":
         # automatic catch-up: replay every check-in hour missed since the last scanned one (max 7 days back)
         ck = cfg["schedule"].get("checkins") or cfg["schedule"]["scan_hours"]
