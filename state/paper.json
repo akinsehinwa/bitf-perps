@@ -1,19 +1,5 @@
 {
-  "pending": [
-    {
-      "symbol": "ORDI",
-      "side": "short",
-      "setup": "swing",
-      "entry": 2.806,
-      "stop": 2.876,
-      "target": 2.695,
-      "qty": 6055.700000000001,
-      "kind": "limit",
-      "expires_ms": 1795176000000,
-      "hold_h": 96,
-      "placed_ms": 1795132800000
-    }
-  ],
+  "pending": [],
   "events": [
     {
       "t": "2026-11-15T12:00:00Z",
@@ -54,8 +40,18 @@
       "t": "2026-11-20T02:00:00Z",
       "sgt": "Fri 20 Nov 10:00 SGT",
       "text": "CLOSED #1 swing short ASTER at 0.50670 (time stop): +81 USD, +0.18R"
+    },
+    {
+      "t": "2026-11-20T12:00:00Z",
+      "sgt": "Fri 20 Nov 20:00 SGT",
+      "text": "CANCELLED swing short ORDI limit at 2.8060: expired unfilled"
+    },
+    {
+      "t": "2026-11-20T13:00:00Z",
+      "sgt": "Fri 20 Nov 21:00 SGT",
+      "text": "CLOSED #4 swing short SOL at 70.98 (target): +655 USD, +1.50R"
     }
   ],
-  "last_run": "2026-11-20T12:08:07Z",
-  "last_checkin_ms": 1795176000000
+  "last_run": "2026-11-20T16:06:58Z",
+  "last_checkin_ms": 1795190400000
 }
