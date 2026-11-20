@@ -192,3 +192,11 @@
 - With a stop (2-3 ATR, with/without 10-day cap): -0.05..+0.02R (all 72), core 10 -0.12..+0.09R. Edge vanishes.
 - Short mirror (stop 3 ATR): 12m +0.05R (core +0.17R, 84% win) but prior 2y -0.06R -> bear-market regime luck.
 - 4h version: ~0R both ways, 86-150 trades/mo. REJECT (all variants).
+## 2026-11-21 QuantifiedStrategies x2 (qs2.py, qs2_st.py), all 72 coins
+- RSI+EMA+rolling VWAP pullback (long, daily/4h, RSI5/RSI2, 0.5-2 ATR below VWAP20, stops 2.5-4 ATR): -0.12..+0.08R,
+  sign flips between periods. REJECT.
+- SuperTrend(10,3) daily long as published: prior 2y +0.79R (core +1.60R, bull run), last 12m -0.01R. Short: 12m
+  +0.17R, prior 2y -0.05R. Both sides, no cap: +0.10R / +0.22R BUT median hold 26 days (90% 75d) - Bitfunded max hold
+  is 7-10 days. 7-day cap: +0.04 / +0.03R. With BTC SuperTrend filter + 7d cap: (10,3) +0.12/+0.07, (10,2.5) +0.18/
+  +0.08, (10,2) +0.27/+0.09R on all 72 (core 10 mixed -0.07..+0.34), 25-40 trades/mo each holding ~7 days (needs
+  slots the book does not have). Roll after the cap: +0.02..+0.14R, 100+ legs/mo. WATCH, not adopted.
