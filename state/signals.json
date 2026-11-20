@@ -1,6 +1,34 @@
 {
-  "as_of": "2026-11-19T16:07:13Z",
-  "bar_close_sgt": "Fri 2026-11-20 00:00",
+  "as_of": "2026-11-20T00:07:55Z",
+  "bar_close_sgt": "Fri 2026-11-20 08:00",
   "scheduled": true,
-  "signals": []
+  "signals": [
+    {
+      "symbol": "ORDI",
+      "side": "short",
+      "setup": "swing: leg 3.0470 -> 2.5520 (7.1 x ATR), 50% 2.7995 / 61.8% 2.8579 / void past 78.6% 2.9411 | grade A+: 3.6R to the next untouched 4h swing",
+      "entry": 2.806,
+      "stop": 2.876,
+      "target": 2.695,
+      "qty": 6055.700000000001,
+      "notional": 16992.294200000004,
+      "margin": 3398.4588400000007,
+      "leverage": 5,
+      "risk_usd": 437.49283535999905,
+      "reward_usd": 658.5888646400015,
+      "fees_round_trip": 13.593835360000003,
+      "rr": 1.5857142857142923,
+      "sized_by": "base 1.75% (stage 1) x mult 1.00 x 0.50 (swing x0.50)",
+      "stage": "1",
+      "firm_hold_limit_days": 7,
+      "time_stop": "Tue 24 Nov 08:07 SGT (96h time stop)",
+      "order": "LIMIT at 2.8060 (1h FVG midline), cancel if not filled by Fri 20 Nov 20:00 SGT",
+      "kind": "limit",
+      "expires_ms": 1795176000000,
+      "hold_h": 96,
+      "placed_ms": 1795132800000,
+      "room": 3.628571428571437,
+      "grade": "A+"
+    }
+  ]
 }
