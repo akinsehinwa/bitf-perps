@@ -181,3 +181,8 @@
   in notional; tight stops up to ~1.9x. 150K: BTC/ETH/SOL fit; BNB/XRP/ADA/UNI capped on tight stops; LINK/AVAX/LTC
   capped even at median stops. 100K: all fit at median except LINK; tight stops capped on ADA/UNI/LINK/AVAX/LTC.
 - Bot now caps size at the coin's max position and says so ("sized by Bitfunded max position").
+## 2026-11-20 Swing hold time (swing_hold.py; all 72, check-in tickets)
+- With the old weekend close: 48h +0.14R | 96h +0.165R | 144h/240h identical to 96h (weekend close ends them first).
+- Without weekend close (live since 2026-11-14): 48h +0.121/+0.125R (12m/prior 2y) | 96h +0.152/+0.145R (+33.5R, 220
+  trades) | 144h +0.144/+0.135R | 240h +0.134/+0.113R. KEEP 96h - best in both periods; longer holds turn more
+  trades into stop-outs.
