@@ -186,3 +186,9 @@
 - Without weekend close (live since 2026-11-14): 48h +0.121/+0.125R (12m/prior 2y) | 96h +0.152/+0.145R (+33.5R, 220
   trades) | 144h +0.144/+0.135R | 240h +0.134/+0.113R. KEEP 96h - best in both periods; longer holds turn more
   trades into stop-outs.
+## 2026-11-21 Triple RSI (QuantifiedStrategies; triple_rsi.py), all 72 coins, daily UTC bars from 4h cache
+- As published (long, no stop): 12m 92 trades 65% win +1.51%/trade; prior 2y 321, 65%, +1.46%. But 10% of trades
+  sank 22-31% before recovering, worst -94% (one -60%) -> unusable under 5% daily / 10% max loss.
+- With a stop (2-3 ATR, with/without 10-day cap): -0.05..+0.02R (all 72), core 10 -0.12..+0.09R. Edge vanishes.
+- Short mirror (stop 3 ATR): 12m +0.05R (core +0.17R, 84% win) but prior 2y -0.06R -> bear-market regime luck.
+- 4h version: ~0R both ways, 86-150 trades/mo. REJECT (all variants).
