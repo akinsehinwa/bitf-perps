@@ -3,6 +3,9 @@ hold 48 / 96 (live) / 144 / 240 hours. House standard: last 12 months first, pri
 import sys, statistics, collections
 sys.path.insert(0, '/home/user/bitf-perps/research'); sys.path.insert(0, '/home/user/bitfunded-perps')
 import perps, ifvg2
+if '--noweekend' in sys.argv:          # live runs 7 days with no weekend close
+    ifvg2.perps.next_weekend_stop = lambda *a, **k: 10 ** 15
+    ifvg2.perps.in_weekend = lambda *a, **k: False
 D = 86_400_000
 END = int(perps.dt.datetime(2026, 11, 13, tzinfo=perps.UTC).timestamp() * 1000); T12 = END - 365 * D
 mk = perps.load_markets(); CR = [k for k, v in mk.items() if v['type'] == 'crypto' and v.get('binance')]
