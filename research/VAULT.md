@@ -4,6 +4,15 @@ Ideas that showed a real edge but can't go into the ticket book yet. Each entry 
 and what would make it worth re-testing. Re-check vault items when the blocker changes, or every few months on the
 latest 12 months of data (house standard: last 12 months first, the 2 years before as the stability check).
 
+## Strategy roster
+
+| Strategy | Status | Universe | Timeframe / entry | Last 12m (backtest) | Notes |
+|---|---|---|---|---|---|
+| **Q** - 4h quality breakout with BTC | LIVE | core 10 | 4h close, limit 0.5 ATR back, 1.5R | +0.65R, ~1.4/week | not Mon/Sat/Sun; 08/20/00 SGT |
+| **CRT** - 4h candle range sweep | LIVE | core 10 | 4h, stop-entry at C2 extreme, range target | +0.56R, ~0.5/week | 08-20 SGT; not Fri/Sat |
+| **Big-leg swing** - 50% retrace + 1h inverted FVG | LIVE (half risk) | all 72 | limit at FVG midline, 1.5R, 96h | +0.16R, ~3.3/week | 08-20 SGT check-ins; off Sat 04:00-Sun 20:00 |
+| **SuperTrend** - both sides, BTC filter, 7-day cap | VAULT (promising) | all 72 | daily flip, trailing stop on the line | +0.27R (10,2) | blocked by hold limit + slots, see below |
+
 ## SuperTrend (both directions, BTC filter) - PROMISING (added 2026-11-21)
 
 **Rule:** daily SuperTrend (ATR 10). Long when the close flips above the line, short when it flips below. Only
