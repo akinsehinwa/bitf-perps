@@ -200,3 +200,4 @@
   is 7-10 days. 7-day cap: +0.04 / +0.03R. With BTC SuperTrend filter + 7d cap: (10,3) +0.12/+0.07, (10,2.5) +0.18/
   +0.08, (10,2) +0.27/+0.09R on all 72 (core 10 mixed -0.07..+0.34), 25-40 trades/mo each holding ~7 days (needs
   slots the book does not have). Roll after the cap: +0.02..+0.14R, 100+ legs/mo. WATCH, not adopted.
+- SuperTrend moved to the maybe vault (research/VAULT.md) as PROMISING on user request.
