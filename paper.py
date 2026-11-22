@@ -267,7 +267,7 @@ def main():
         ck = cfg["schedule"].get("checkins") or cfg["schedule"]["scan_hours"]
         cur = (now_ms() // (4 * H)) * 4 * H                      # the 4h close this check-in scans
         last = book.get("last_checkin_ms") or cur
-        t = max(last, cur - 7 * 86_400_000) + H
+        t = max(last, cur - 7 * 86_400_000, book.get("no_catchup_before", 0) - H) + H   # paused stretches are not replayed
         missed = []
         while t < cur:
             if t % (4 * H) == 0 and perps.local_dt(t, 8).hour in ck:
