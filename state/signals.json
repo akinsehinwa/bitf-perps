@@ -1,6 +1,34 @@
 {
-  "as_of": "2026-11-27T08:07:02Z",
-  "bar_close_sgt": "Fri 2026-11-27 16:00",
-  "scheduled": false,
-  "signals": []
+  "as_of": "2026-11-27T12:07:00Z",
+  "bar_close_sgt": "Fri 2026-11-27 20:00",
+  "scheduled": true,
+  "signals": [
+    {
+      "symbol": "ENS",
+      "side": "short",
+      "setup": "swing: leg 3.8990 -> 3.2660 (7.1 x ATR), 50% 3.5825 / 61.8% 3.6572 / void past 78.6% 3.7635 | grade B: 2.2R to the next untouched 4h swing",
+      "entry": 3.598,
+      "stop": 3.677,
+      "target": 3.474,
+      "qty": 5343.200000000001,
+      "notional": 19224.8336,
+      "margin": 3844.9667200000004,
+      "leverage": 5,
+      "risk_usd": 437.492666880001,
+      "reward_usd": 647.1769331199982,
+      "fees_round_trip": 15.379866880000003,
+      "rr": 1.5696202531645491,
+      "sized_by": "base 1.75% (stage 1) x mult 1.00 x 0.50 (swing x0.50)",
+      "stage": "1",
+      "firm_hold_limit_days": 7,
+      "time_stop": "Tue 01 Dec 20:07 SGT (96h time stop)",
+      "order": "LIMIT at 3.5980 (1h FVG midline), cancel if not filled by Sat 28 Nov 08:00 SGT",
+      "kind": "limit",
+      "expires_ms": 1795824000000,
+      "hold_h": 96,
+      "placed_ms": 1795780800000,
+      "room": 2.1518987341772093,
+      "grade": "B"
+    }
+  ]
 }
